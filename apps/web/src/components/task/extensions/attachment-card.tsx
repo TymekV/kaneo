@@ -18,6 +18,7 @@ function AttachmentCardView({ node }: NodeViewProps) {
   const url = isValidUrl(rawUrl) ? rawUrl : "";
   const filename = String(node.attrs.filename || "Attachment");
   const mimeType = String(node.attrs.mimeType || "");
+  const extension: string | undefined = node.attrs.filename?.split(".")?.pop();
   const size = Number(node.attrs.size || 0);
 
   return (
@@ -27,6 +28,7 @@ function AttachmentCardView({ node }: NodeViewProps) {
         target="_blank"
         rel="noopener noreferrer"
         className="kaneo-attachment-card"
+        data-file-type={mimeType || extension}
         title={filename}
       >
         <span className="kaneo-attachment-card-icon">

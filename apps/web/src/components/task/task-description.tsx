@@ -85,6 +85,7 @@ import {
 } from "./extensions/shiki-code-block";
 import { TaskItemWithCheckbox } from "./extensions/task-item-with-checkbox";
 import "tippy.js/dist/tippy.css";
+import { PdfPreview } from "../preview/pdf-preview";
 
 type TaskDescriptionProps = {
   taskId: string;
@@ -340,6 +341,8 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
     src: string;
     alt: string;
   } | null>(null);
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
+  const [previewPdfOpen, setPreviewPdfOpen] = useState(false);
   const slashMenuRef = useRef<SlashMenuState | null>(null);
 
   useLayoutEffect(() => {
@@ -888,6 +891,38 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
   }, [editor, t]);
 
   useEffect(() => {
+    if (!editor) return;
+
+    const handleAttachmentPreviewClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      const closestLink = target.closest("a");
+      if (
+        !closestLink ||
+        !closestLink.classList.contains("kaneo-attachment-card")
+      )
+        return;
+
+      const fileType = closestLink.dataset.fileType;
+      if (!fileType) return;
+
+      if (fileType === "application/pdf" || fileType === "pdf") {
+        event.preventDefault();
+        setPreviewPdf(closestLink.href);
+        setPreviewPdfOpen(true);
+      }
+    };
+
+    const dom = editor.view.dom;
+    dom.addEventListener("click", handleAttachmentPreviewClick);
+
+    return () => {
+      dom.removeEventListener("click", handleAttachmentPreviewClick);
+    };
+  }, [editor, t]);
+
+  useEffect(() => {
     slashMenuRef.current = slashMenu;
   }, [slashMenu]);
 
@@ -895,8 +930,7 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
     (prefilledUrl?: string) => {
       if (!canEditRef.current || !editor) return;
       const previousUrl = editor.getAttributes("link").href as
-        | string
-        | undefined;
+        string | undefined;
       const url = window.prompt(
         t("tasks:detail.editor.enterUrl"),
         prefilledUrl || previousUrl || "",
@@ -1977,6 +2011,7 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
           )}
         </DialogPopup>
       </Dialog>
+      <PdfPreview open={previewPdfOpen} documentUrl={previewPdf} />
     </section>
   );
 }
