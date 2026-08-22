@@ -32,6 +32,7 @@ export function PdfPreview({
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [displayedPageNumber, setDisplayedPageNumber] = useState<number>(1);
+  const [zoom, setZoom] = useState(150);
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages }: { numPages: number }): void => {
@@ -117,6 +118,7 @@ export function PdfPreview({
                 pageIndices={pageIndices}
                 onLoadSuccess={onDocumentLoadSuccess}
                 setPageRef={setPageRef}
+                zoom={zoom}
               />
             </div>
             <div className="flex justify-center fixed left-0 right-0 bottom-4">
@@ -126,6 +128,8 @@ export function PdfPreview({
                 totalPages={numPages || 0}
                 displayedPageNumber={displayedPageNumber}
                 setDisplayedPageNumber={setDisplayedPageNumber}
+                zoom={zoom}
+                setZoom={setZoom}
               >
                 <a
                   href={documentUrl || "#"}
@@ -151,12 +155,14 @@ const PdfPages = memo(function PdfPages({
   pageIndices,
   onLoadSuccess,
   setPageRef,
+  zoom,
 }: {
   documentUrl: string;
   options: any;
   pageIndices: number[];
   onLoadSuccess: (p: { numPages: number }) => void;
   setPageRef: (pageNum: number, el: HTMLDivElement | null) => void;
+  zoom: number;
 }) {
   return (
     <Document
@@ -167,7 +173,7 @@ const PdfPages = memo(function PdfPages({
     >
       {pageIndices.map((i) => (
         <div key={i} ref={(ref) => setPageRef(i + 1, ref)} data-page={i + 1}>
-          <Page pageNumber={i + 1} />
+          <Page pageNumber={i + 1} scale={zoom / 100} />
         </div>
       ))}
     </Document>

@@ -6,7 +6,14 @@ import {
   SetStateAction,
 } from "react";
 import { Button } from "../ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Minus,
+  Plus,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { Input } from "../ui/input";
 
 export type DocumentPaginatorProps = {
@@ -15,6 +22,8 @@ export type DocumentPaginatorProps = {
   displayedPageNumber: number;
   setDisplayedPageNumber: Dispatch<SetStateAction<number>>;
   totalPages: number;
+  zoom: number;
+  setZoom: Dispatch<SetStateAction<number>>;
   children?: ReactNode;
 };
 
@@ -25,6 +34,8 @@ export function DocumentPaginator({
   children,
   displayedPageNumber,
   setDisplayedPageNumber,
+  zoom,
+  setZoom,
 }: DocumentPaginatorProps) {
   const handlePageJump = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -76,6 +87,28 @@ export function DocumentPaginator({
         onClick={() => goToPage(page + 1)}
       >
         <ArrowRight />
+      </Button>
+
+      <div className="h-full border-l my-2"></div>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        disabled={zoom <= 50}
+        onClick={() => setZoom((zoom) => zoom - 25)}
+      >
+        <Minus />
+      </Button>
+
+      <p className="text-sm text-muted-foreground">{zoom}%</p>
+
+      <Button
+        size="icon"
+        variant="ghost"
+        disabled={zoom >= 200}
+        onClick={() => setZoom((zoom) => zoom + 25)}
+      >
+        <Plus />
       </Button>
 
       {children && (
