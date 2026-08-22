@@ -1,34 +1,54 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { ReactNode, useCallback, KeyboardEvent } from "react";
 import { Button } from "../ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Input } from "../ui/input";
 
 export type DocumentPaginatorProps = {
   page: number;
-  setPage: Dispatch<SetStateAction<number>>;
+  goToPage: (page: number) => void;
   totalPages: number;
   children?: ReactNode;
 };
 
 export function DocumentPaginator({
   page,
-  setPage,
+  goToPage,
   totalPages,
   children,
 }: DocumentPaginatorProps) {
+  const handlePageJump = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        try {
+          const targetPage = parseInt(e.currentTarget.value);
+          goToPage(targetPage);
+        } catch {}
+      }
+    },
+    [goToPage],
+  );
+
   return (
     <div className="flex bg-card p-1 border rounded-xl items-center gap-1 shadow">
       <Button
         size="icon"
         variant="ghost"
         disabled={page <= 1}
-        onClick={() => setPage((page) => page - 1)}
+        onClick={() => goToPage(page - 1)}
       >
         <ArrowLeft />
       </Button>
 
       <div className="flex items-center gap-1">
-        <Input size="sm" className="w-12" />
+        <Input
+          size="sm"
+          className="w-12"
+          inputClassName="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          type="number"
+          min={1}
+          max={totalPages}
+          onKeyDown={handlePageJump}
+        />
         <p className="text-sm text-muted-foreground">/</p>
         <p className="text-sm text-muted-foreground">{totalPages}</p>
       </div>
@@ -37,7 +57,7 @@ export function DocumentPaginator({
         size="icon"
         variant="ghost"
         disabled={page >= totalPages}
-        onClick={() => setPage((page) => page + 1)}
+        onClick={() => goToPage(page + 1)}
       >
         <ArrowRight />
       </Button>

@@ -13,6 +13,7 @@ type InputProps = Omit<
   size?: "sm" | "default" | "lg" | number;
   unstyled?: boolean;
   nativeInput?: boolean;
+  inputClassName?: string;
 };
 
 function Input({
@@ -20,6 +21,7 @@ function Input({
   size = "default",
   unstyled = false,
   nativeInput = false,
+  inputClassName: additionalInputClassName,
   ...props
 }: InputProps) {
   const inputClassName = cn(
@@ -31,6 +33,7 @@ function Input({
       "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
     props.type === "file" &&
       "text-muted-foreground file:me-3 file:bg-transparent file:font-medium file:text-foreground file:text-sm",
+    additionalInputClassName,
   );
 
   return (

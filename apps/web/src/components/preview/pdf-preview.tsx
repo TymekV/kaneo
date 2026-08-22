@@ -1,5 +1,5 @@
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -44,6 +44,21 @@ export function PdfPreview({
     [numPages],
   );
 
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const setPageRef = useCallback(
+    (pageNum: number, el: HTMLDivElement | null) => {
+      if (el) pageRefs.current.set(pageNum, el);
+      else pageRefs.current.delete(pageNum);
+    },
+    [],
+  );
+
+  const goToPage = useCallback((page: number) => {
+    const el = pageRefs.current.get(page);
+    el?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, []);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup
@@ -53,27 +68,34 @@ export function PdfPreview({
         viewportClassName="p-0"
       >
         {documentUrl && (
-          <div className="flex flex-col items-center px-4 py-6 overflow-scroll">
-            <PdfPages
-              documentUrl={documentUrl}
-              options={pdfOptions}
-              pageIndices={pageIndices}
-              onLoadSuccess={onDocumentLoadSuccess}
-            />
+          <>
+            <div className="flex flex-col items-center px-4 pt-6 pb-18 overflow-scroll scroll-pt-2">
+              <PdfPages
+                documentUrl={documentUrl}
+                options={pdfOptions}
+                pageIndices={pageIndices}
+                onLoadSuccess={onDocumentLoadSuccess}
+                setPageRef={setPageRef}
+              />
+            </div>
             <div className="flex justify-center fixed left-0 right-0 bottom-4">
               <DocumentPaginator
                 page={pageNumber}
-                setPage={setPageNumber}
+                goToPage={goToPage}
                 totalPages={numPages || 0}
               >
-                <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={documentUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Button size="icon" variant="ghost">
                     <Download />
                   </Button>
                 </a>
               </DocumentPaginator>
             </div>
-          </div>
+          </>
         )}
       </DialogPopup>
     </Dialog>
@@ -85,11 +107,13 @@ const PdfPages = memo(function PdfPages({
   options,
   pageIndices,
   onLoadSuccess,
+  setPageRef,
 }: {
   documentUrl: string;
   options: any;
   pageIndices: number[];
   onLoadSuccess: (p: { numPages: number }) => void;
+  setPageRef: (pageNum: number, el: HTMLDivElement | null) => void;
 }) {
   return (
     <Document
@@ -99,7 +123,9 @@ const PdfPages = memo(function PdfPages({
       className="flex flex-col gap-2"
     >
       {pageIndices.map((i) => (
-        <Page key={i} pageNumber={i + 1} />
+        <div key={i} ref={(ref) => setPageRef(i + 1, ref)}>
+          <Page pageNumber={i + 1} />
+        </div>
       ))}
     </Document>
   );
