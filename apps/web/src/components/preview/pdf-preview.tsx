@@ -1,5 +1,5 @@
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -31,6 +31,7 @@ export function PdfPreview({
 }: PdfPreviewProps) {
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const [displayedPageNumber, setDisplayedPageNumber] = useState<number>(1);
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages }: { numPages: number }): void => {
@@ -48,8 +49,15 @@ export function PdfPreview({
 
   const setPageRef = useCallback(
     (pageNum: number, el: HTMLDivElement | null) => {
-      if (el) pageRefs.current.set(pageNum, el);
-      else pageRefs.current.delete(pageNum);
+      const prev = pageRefs.current.get(pageNum);
+      if (prev && observerRef.current) observerRef.current.unobserve(prev);
+
+      if (el) {
+        pageRefs.current.set(pageNum, el);
+        observerRef.current?.observe(el);
+      } else {
+        pageRefs.current.delete(pageNum);
+      }
     },
     [],
   );
@@ -57,7 +65,40 @@ export function PdfPreview({
   const goToPage = useCallback((page: number) => {
     const el = pageRefs.current.get(page);
     el?.scrollIntoView({ behavior: "instant", block: "start" });
+    setPageNumber(page);
   }, []);
+
+  useEffect(() => {
+    setDisplayedPageNumber(pageNumber);
+  }, [pageNumber]);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) {
+          const pageNum = Number(visible.target.getAttribute("data-page"));
+          setPageNumber(pageNum);
+        }
+      },
+      { threshold: [0.5] },
+    );
+    observerRef.current = observer;
+
+    // catch any refs that mounted before this effect ran
+    pageRefs.current.forEach((el) => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+      observerRef.current = null;
+    };
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,9 +121,11 @@ export function PdfPreview({
             </div>
             <div className="flex justify-center fixed left-0 right-0 bottom-4">
               <DocumentPaginator
-                page={pageNumber}
+                actualPage={pageNumber}
                 goToPage={goToPage}
                 totalPages={numPages || 0}
+                displayedPageNumber={displayedPageNumber}
+                setDisplayedPageNumber={setDisplayedPageNumber}
               >
                 <a
                   href={documentUrl || "#"}
@@ -123,7 +166,7 @@ const PdfPages = memo(function PdfPages({
       className="flex flex-col gap-2"
     >
       {pageIndices.map((i) => (
-        <div key={i} ref={(ref) => setPageRef(i + 1, ref)}>
+        <div key={i} ref={(ref) => setPageRef(i + 1, ref)} data-page={i + 1}>
           <Page pageNumber={i + 1} />
         </div>
       ))}

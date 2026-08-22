@@ -1,20 +1,30 @@
-import { ReactNode, useCallback, KeyboardEvent } from "react";
+import {
+  ReactNode,
+  useCallback,
+  KeyboardEvent,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { Button } from "../ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Input } from "../ui/input";
 
 export type DocumentPaginatorProps = {
-  page: number;
+  actualPage: number;
   goToPage: (page: number) => void;
+  displayedPageNumber: number;
+  setDisplayedPageNumber: Dispatch<SetStateAction<number>>;
   totalPages: number;
   children?: ReactNode;
 };
 
 export function DocumentPaginator({
-  page,
+  actualPage: page,
   goToPage,
   totalPages,
   children,
+  displayedPageNumber,
+  setDisplayedPageNumber,
 }: DocumentPaginatorProps) {
   const handlePageJump = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -48,6 +58,12 @@ export function DocumentPaginator({
           min={1}
           max={totalPages}
           onKeyDown={handlePageJump}
+          value={displayedPageNumber}
+          onValueChange={(value) => {
+            const pageNumber = parseInt(value);
+            if (isNaN(pageNumber) && value !== "") return;
+            setDisplayedPageNumber(pageNumber);
+          }}
         />
         <p className="text-sm text-muted-foreground">/</p>
         <p className="text-sm text-muted-foreground">{totalPages}</p>
