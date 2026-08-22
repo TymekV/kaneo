@@ -1,15 +1,19 @@
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { Dialog, DialogPopup, DialogViewport } from "../ui/dialog";
+import { Dialog, DialogPopup } from "../ui/dialog";
 import { DialogRootChangeEventDetails } from "@base-ui/react";
 import { DocumentPaginator } from "./document-paginator";
 import { Button } from "../ui/button";
 import { Download } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+const pdfOptions = {
+  withCredentials: true,
+};
 
 export type PdfPreviewProps = {
   open: boolean;
@@ -35,6 +39,11 @@ export function PdfPreview({
     [setNumPages],
   );
 
+  const pageIndices = useMemo(
+    () => (numPages ? Array.from({ length: numPages }, (_, i) => i) : []),
+    [numPages],
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup
@@ -45,18 +54,12 @@ export function PdfPreview({
       >
         {documentUrl && (
           <div className="flex flex-col items-center px-4 py-6 overflow-scroll">
-            <Document
-              file={documentUrl}
-              options={{
-                withCredentials: true,
-              }}
+            <PdfPages
+              documentUrl={documentUrl}
+              options={pdfOptions}
+              pageIndices={pageIndices}
               onLoadSuccess={onDocumentLoadSuccess}
-              className="flex flex-col gap-2"
-            >
-              {[...Array(numPages).keys()].map((pageIndex) => (
-                <Page pageNumber={pageIndex + 1} />
-              ))}
-            </Document>
+            />
             <div className="flex justify-center fixed left-0 right-0 bottom-4">
               <DocumentPaginator
                 page={pageNumber}
@@ -76,3 +79,28 @@ export function PdfPreview({
     </Dialog>
   );
 }
+
+const PdfPages = memo(function PdfPages({
+  documentUrl,
+  options,
+  pageIndices,
+  onLoadSuccess,
+}: {
+  documentUrl: string;
+  options: any;
+  pageIndices: number[];
+  onLoadSuccess: (p: { numPages: number }) => void;
+}) {
+  return (
+    <Document
+      file={documentUrl}
+      options={options}
+      onLoadSuccess={onLoadSuccess}
+      className="flex flex-col gap-2"
+    >
+      {pageIndices.map((i) => (
+        <Page key={i} pageNumber={i + 1} />
+      ))}
+    </Document>
+  );
+});
