@@ -791,12 +791,10 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
           return true;
         },
         handleKeyDown: (view, event) => {
-          if (
-            !(
-              (event.metaKey || event.ctrlKey) &&
-              event.key.toLowerCase() === "a"
-            )
-          ) {
+          if (!(
+            (event.metaKey || event.ctrlKey) &&
+            event.key.toLowerCase() === "a"
+          )) {
             return false;
           }
 
@@ -2011,7 +2009,11 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
           )}
         </DialogPopup>
       </Dialog>
-      <PdfPreview open={previewPdfOpen} documentUrl={previewPdf} />
+      <PdfPreview
+        open={previewPdfOpen}
+        documentUrl={previewPdf}
+        onOpenChange={setPreviewPdfOpen}
+      />
     </section>
   );
 }

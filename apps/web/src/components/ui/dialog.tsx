@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/cn";
 import { i18n } from "@/lib/i18n";
+import { ClassNameValue } from "tailwind-merge";
 
 const DialogCreateHandle = DialogPrimitive.createHandle;
 
@@ -91,10 +92,12 @@ function DialogPopup({
   children,
   showCloseButton = true,
   bottomStickOnMobile = true,
+  viewportClassName,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
   bottomStickOnMobile?: boolean;
+  viewportClassName?: ClassNameValue;
 }) {
   return (
     <DialogPortal>
@@ -103,6 +106,7 @@ function DialogPopup({
         className={cn(
           bottomStickOnMobile &&
             "max-sm:grid-rows-[1fr_auto] max-sm:p-0 max-sm:pt-12",
+          viewportClassName,
         )}
       >
         <DialogPrimitive.Popup

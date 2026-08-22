@@ -3,17 +3,13 @@ import { useCallback, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { Dialog, DialogPopup } from "../ui/dialog";
+import { Dialog, DialogPopup, DialogViewport } from "../ui/dialog";
 import { DialogRootChangeEventDetails } from "@base-ui/react";
 import { DocumentPaginator } from "./document-paginator";
 import { Button } from "../ui/button";
 import { Download } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-
-const pdfOptions = {
-  withCredentials: true,
-};
 
 export type PdfPreviewProps = {
   open: boolean;
@@ -45,22 +41,23 @@ export function PdfPreview({
         className="max-w-6xl border-0 bg-transparent p-0 shadow-none before:hidden"
         showCloseButton={false}
         bottomStickOnMobile={false}
+        viewportClassName="p-0"
       >
         {documentUrl && (
-          <div className="flex flex-col gap-6 items-center justify-center p-4">
-            {/*<img
-              src={previewImage.src}
-              alt={previewImage.alt}
-              className="max-h-[85vh] max-w-[92vw] rounded-xl border border-white/12 bg-black/30 object-contain shadow-2xl"
-            />*/}
+          <div className="flex flex-col items-center px-4 py-6 overflow-scroll">
             <Document
               file={documentUrl}
-              options={pdfOptions}
+              options={{
+                withCredentials: true,
+              }}
               onLoadSuccess={onDocumentLoadSuccess}
+              className="flex flex-col gap-2"
             >
-              <Page pageNumber={pageNumber} />
+              {[...Array(numPages).keys()].map((pageIndex) => (
+                <Page pageNumber={pageIndex + 1} />
+              ))}
             </Document>
-            <div className="flex justify-center">
+            <div className="flex justify-center fixed left-0 right-0 bottom-4">
               <DocumentPaginator
                 page={pageNumber}
                 setPage={setPageNumber}

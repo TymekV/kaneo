@@ -1,6 +1,7 @@
 import { Dispatch, ReactNode, SetStateAction } from "react";
 import { Button } from "../ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Input } from "../ui/input";
 
 export type DocumentPaginatorProps = {
   page: number;
@@ -16,7 +17,7 @@ export function DocumentPaginator({
   children,
 }: DocumentPaginatorProps) {
   return (
-    <div className="flex bg-card p-1 border rounded-xl items-center gap-1">
+    <div className="flex bg-card p-1 border rounded-xl items-center gap-1 shadow">
       <Button
         size="icon"
         variant="ghost"
@@ -26,9 +27,11 @@ export function DocumentPaginator({
         <ArrowLeft />
       </Button>
 
-      <p className="text-sm text-muted-foreground">
-        {page} / {totalPages}
-      </p>
+      <div className="flex items-center gap-1">
+        <Input size="sm" className="w-12" />
+        <p className="text-sm text-muted-foreground">/</p>
+        <p className="text-sm text-muted-foreground">{totalPages}</p>
+      </div>
 
       <Button
         size="icon"
