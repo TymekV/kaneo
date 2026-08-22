@@ -104,14 +104,14 @@ export function PdfPreview({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup
-        className="max-w-6xl border-0 bg-transparent p-0 shadow-none before:hidden"
+        className="w-fit max-w-full border-0 bg-transparent p-0 shadow-none before:hidden"
         showCloseButton={false}
         bottomStickOnMobile={false}
-        viewportClassName="p-0"
+        viewportClassName="p-0 overflow-scroll scroll-pt-2"
       >
         {documentUrl && (
           <>
-            <div className="flex flex-col items-center px-4 pt-6 pb-18 overflow-scroll scroll-pt-2">
+            <div className="flex flex-col items-center pt-6 pb-8">
               <PdfPages
                 documentUrl={documentUrl}
                 options={pdfOptions}
@@ -121,7 +121,7 @@ export function PdfPreview({
                 zoom={zoom}
               />
             </div>
-            <div className="flex justify-center fixed left-0 right-0 bottom-4">
+            <div className="flex justify-center sticky left-0 right-0 bottom-4">
               <DocumentPaginator
                 actualPage={pageNumber}
                 goToPage={goToPage}
