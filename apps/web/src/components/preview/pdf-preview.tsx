@@ -34,13 +34,13 @@ export function PdfPreview({
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [displayedPageNumber, setDisplayedPageNumber] = useState<number>(1);
-  const [zoom, setZoom] = useState(150);
+  const [zoom, setZoom] = useState(125);
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages }: { numPages: number }): void => {
       setNumPages(numPages);
     },
-    [setNumPages],
+    [],
   );
 
   const pageIndices = useMemo(
