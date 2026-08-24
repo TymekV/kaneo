@@ -1,15 +1,17 @@
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { Dialog, DialogPopup } from "../ui/dialog";
-import { DialogRootChangeEventDetails } from "@base-ui/react";
-import { DocumentPaginator } from "./document-paginator";
 import { Button } from "../ui/button";
+import { Dialog, DialogPopup } from "../ui/dialog";
+import type { DialogRootChangeEventDetails } from "@base-ui/react";
+import { DocumentPaginator } from "./document-paginator";
 import { Download } from "lucide-react";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const pdfOptions = {
   withCredentials: true,
