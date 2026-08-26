@@ -10,6 +10,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "./button";
 import { Calendar } from "./calendar";
 import { ContextMenuItem, ContextMenuSeparator } from "./context-menu";
+import { Input } from "./input";
 
 export type InlineDatePickerProps = Omit<
   React.ComponentProps<typeof Calendar>,
@@ -21,6 +22,7 @@ export type InlineDatePickerProps = Omit<
   clearShown?: boolean | "auto";
   onClear?: () => void;
   context?: "popover" | "context-menu";
+  pickTime?: boolean;
 };
 
 export function InlineDatePicker({
@@ -30,6 +32,7 @@ export function InlineDatePicker({
   clearShown = "auto",
   onClear,
   context = "popover",
+  pickTime = false,
   className,
   ...props
 }: InlineDatePickerProps) {
@@ -95,6 +98,15 @@ export function InlineDatePicker({
         )}
         {...props}
       />
+      {pickTime && (
+        <Input
+          type="time"
+          step="60"
+          value={timeValue}
+          onChange={(e) => setTimeValue(e.target.value)}
+          className="mt-2 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        />
+      )}
       {(clearShown === "auto" ? !!selected : clearShown) &&
         (context === "popover" ? (
           <div className="pt-2 mt-2 border-t border-border">
