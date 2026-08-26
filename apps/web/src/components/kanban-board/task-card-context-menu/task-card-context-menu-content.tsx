@@ -30,6 +30,7 @@ import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
+import { InlineDatePicker } from "@/components/ui/inline-date-picker";
 
 type TaskCardContext = {
   worskpaceId: string;
@@ -201,54 +202,42 @@ export default function TaskCardContextMenuContent({
             <span>{t("tasks:dueDate.label")}</span>
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-fit min-w-0 p-0">
-            <div className="p-2">
-              <Calendar
-                mode="single"
-                selected={task.dueDate ? new Date(task.dueDate) : undefined}
-                onSelect={async (date) => {
-                  try {
-                    await updateTaskDueDate({
-                      ...task,
-                      dueDate: date?.toISOString() || null,
-                    });
-                    toast.success(t("tasks:dueDate.updateSuccess"));
-                  } catch (error) {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : t("tasks:dueDate.updateError"),
-                    );
-                  }
-                }}
-                className="w-full bg-popover!"
-              />
-            </div>
-            {task.dueDate && (
-              <>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  className="gap-2 text-muted-foreground"
-                  onClick={async () => {
-                    try {
-                      await updateTaskDueDate({
-                        ...task,
-                        dueDate: null,
-                      });
-                      toast.success(t("tasks:dueDate.clearSuccess"));
-                    } catch (error) {
-                      toast.error(
-                        error instanceof Error
-                          ? error.message
-                          : t("tasks:dueDate.clearError"),
-                      );
-                    }
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                  <span>{t("tasks:dueDate.clear")}</span>
-                </ContextMenuItem>
-              </>
-            )}
+            <InlineDatePicker
+              context="context-menu"
+              selected={task.dueDate ? new Date(task.dueDate) : undefined}
+              onSelect={async (date) => {
+                try {
+                  await updateTaskDueDate({
+                    ...task,
+                    dueDate: date?.toISOString() || null,
+                  });
+                  toast.success(t("tasks:dueDate.updateSuccess"));
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : t("tasks:dueDate.updateError"),
+                  );
+                }
+              }}
+              onClear={async () => {
+                try {
+                  await updateTaskDueDate({
+                    ...task,
+                    dueDate: null,
+                  });
+                  toast.success(t("tasks:dueDate.clearSuccess"));
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : t("tasks:dueDate.clearError"),
+                  );
+                }
+              }}
+              clearLabel={t("tasks:dueDate.clear")}
+              className="w-full bg-popover!"
+            />
           </ContextMenuSubContent>
         </ContextMenuSub>
       )}

@@ -53,6 +53,7 @@ import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
+import { InlineDatePicker } from "@/components/ui/inline-date-picker";
 
 type CreateTaskModalProps = {
   open: boolean;
@@ -274,8 +275,7 @@ function CreateTaskModal({
 
       const updatedProject = produce(project, (draft) => {
         let existingTask:
-          | (typeof draft.columns)[number]["tasks"][number]
-          | undefined;
+          (typeof draft.columns)[number]["tasks"][number] | undefined;
 
         for (const column of draft.columns ?? []) {
           const taskIndex = column.tasks.findIndex(
@@ -742,25 +742,12 @@ function CreateTaskModal({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0" align="start">
-                  <Calendar
-                    mode="single"
+                  <InlineDatePicker
                     selected={startDate}
                     onSelect={setStartDate}
                     className="w-full bg-popover"
+                    clearLabel={t("common:modals.createTask.clearStartDate")}
                   />
-                  {startDate && (
-                    <div className="p-2 border-t border-border">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() => setStartDate(undefined)}
-                      >
-                        {t("common:modals.createTask.clearStartDate")}
-                      </Button>
-                    </div>
-                  )}
                 </PopoverContent>
               </Popover>
 
@@ -903,25 +890,12 @@ function CreateTaskModal({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0" align="start">
-                  <Calendar
-                    mode="single"
+                  <InlineDatePicker
                     selected={dueDate}
                     onSelect={setDueDate}
                     className="w-full bg-popover"
+                    clearLabel={t("common:modals.createTask.clearDueDate")}
                   />
-                  {dueDate && (
-                    <div className="p-2 border-t border-border">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() => setDueDate(undefined)}
-                      >
-                        {t("common:modals.createTask.clearDueDate")}
-                      </Button>
-                    </div>
-                  )}
                 </PopoverContent>
               </Popover>
 

@@ -12,6 +12,7 @@ import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
+import { InlineDatePicker } from "../ui/inline-date-picker";
 
 type TaskStartDatePopoverProps = {
   task: Task;
@@ -51,28 +52,14 @@ export default function TaskStartDatePopover({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="p-0" align="start">
-        <Calendar
-          mode="single"
+        <InlineDatePicker
           selected={task.startDate ? new Date(task.startDate) : undefined}
           onSelect={handleDateChange}
           disabled={
             task.dueDate ? { after: new Date(task.dueDate) } : undefined
           }
-          className="w-full bg-popover"
+          clearLabel={t("tasks:popover.startDate.clear")}
         />
-        {task.startDate && (
-          <div className="pt-2 border-t border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-              onClick={() => handleDateChange(undefined)}
-            >
-              <X className="h-4 w-4" />
-              {t("tasks:popover.startDate.clear")}
-            </Button>
-          </div>
-        )}
       </PopoverContent>
     </Popover>
   );

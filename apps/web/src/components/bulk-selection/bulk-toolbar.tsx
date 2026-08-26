@@ -51,6 +51,7 @@ import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
 import { Button } from "../ui/button";
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from "../ui/toolbar";
+import { InlineDatePicker } from "../ui/inline-date-picker";
 
 type BulkActionItem = {
   value: string;
@@ -431,22 +432,11 @@ function BulkToolbar() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0" align="center">
-                  <Calendar
-                    mode="single"
+                  <InlineDatePicker
                     onSelect={handleBulkDueDate}
-                    className="w-full bg-popover"
+                    clearLabel={t("tasks:dueDate.clear")}
+                    clearShown
                   />
-                  <div className="p-0 border-t border-border">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground rounded-none"
-                      onClick={() => handleBulkDueDate(undefined)}
-                    >
-                      <X className="h-4 w-4" />
-                      {t("tasks:dueDate.clear")}
-                    </Button>
-                  </div>
                 </PopoverContent>
               </Popover>
             </ToolbarGroup>
