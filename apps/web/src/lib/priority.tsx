@@ -5,28 +5,51 @@ import {
   CircleAlert,
   Minus,
 } from "lucide-react";
+import { cn } from "./cn";
 
-export function getPriorityIcon(priority: string) {
+export function getPriorityIcon(priority: string, className?: string) {
   switch (priority) {
     case "urgent":
       return (
-        <CircleAlert className="h-[12px] w-[12px] text-destructive-foreground" />
+        <CircleAlert
+          className={cn(
+            "h-[12px] w-[12px] text-destructive-foreground",
+            className,
+          )}
+        />
       );
     case "high":
       return (
-        <ChevronsUp className="h-[12px] w-[12px] text-warning-foreground" />
+        <ChevronsUp
+          className={cn("h-[12px] w-[12px] text-warning-foreground", className)}
+        />
       );
     case "medium":
       return (
-        <ChevronUp className="h-[12px] w-[12px] text-warning-foreground/80" />
+        <ChevronUp
+          className={cn(
+            "h-[12px] w-[12px] text-warning-foreground/80",
+            className,
+          )}
+        />
       );
     case "low":
       return (
-        <ChevronDown className="h-[12px] w-[12px] text-info-foreground/85" />
+        <ChevronDown
+          className={cn("h-[12px] w-[12px] text-info-foreground/85", className)}
+        />
       );
     case "no-priority":
-      return <Minus className="h-[12px] w-[12px] text-muted-foreground" />;
+      return (
+        <Minus
+          className={cn("h-[12px] w-[12px] text-muted-foreground", className)}
+        />
+      );
     default:
-      return <Minus className="h-[12px] w-[12px] text-muted-foreground" />;
+      return (
+        <Minus
+          className={cn("h-[12px] w-[12px] text-muted-foreground", className)}
+        />
+      );
   }
 }

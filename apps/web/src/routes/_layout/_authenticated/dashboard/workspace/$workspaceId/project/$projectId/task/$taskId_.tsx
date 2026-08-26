@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import TaskLayout from "@/components/common/task-layout";
 import PageTitle from "@/components/page-title";
 import TaskDetailsContent from "@/components/task/task-details-content";
@@ -9,15 +10,21 @@ import {
   TaskPropertiesSidebarSkeleton,
 } from "@/components/task/task-page-skeleton";
 import TaskPropertiesSidebar from "@/components/task/task-properties-sidebar";
+import { TaskSearchSidebar } from "@/components/task/task-search-sidebar";
 import { Button } from "@/components/ui/button";
 import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activities-by-task-id";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import { getSharedShikiHighlighter } from "@/lib/shiki-highlighter";
 
+const taskSearchSchema = z.object({
+  query: z.string().optional(),
+});
+
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_",
 )({
+  validateSearch: taskSearchSchema,
   component: RouteComponent,
 });
 
@@ -25,6 +32,7 @@ function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { projectId, workspaceId, taskId } = Route.useParams();
+  const { query } = Route.useSearch();
   const {
     data: task,
     isLoading: isTaskLoading,
@@ -65,6 +73,28 @@ function RouteComponent() {
       taskId={taskId}
       projectId={projectId}
       workspaceId={workspaceId}
+      leftSidebar={
+        !query ? undefined : (
+          <TaskSearchSidebar
+            query={query}
+            setQuery={(query) =>
+              navigate({
+                to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
+                params: {
+                  workspaceId,
+                  projectId,
+                  taskId,
+                },
+                search: { query },
+                replace: true,
+              })
+            }
+            taskId={taskId}
+            projectId={projectId}
+            workspaceId={workspaceId}
+          />
+        )
+      }
       rightSidebar={
         isLoading ? (
           <TaskPropertiesSidebarSkeleton className="h-full w-full lg:w-72 xl:w-80 flex flex-col gap-2" />
