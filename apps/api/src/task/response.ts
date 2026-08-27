@@ -24,6 +24,10 @@ export const taskSchema = z
     priority: z.string().openapi({ description: priorityDescription }),
     startDate: nullableResponseTimestamp,
     dueDate: nullableResponseTimestamp,
+    reminderLeadTimeMinutes: z.number().int().nullable().openapi({
+      description:
+        "Minutes before the due date to notify the assignee, or null when disabled.",
+    }),
     createdAt: responseTimestamp,
   })
   .openapi("Task");
@@ -67,6 +71,7 @@ export const boardTaskSchema = z
     priority: z.string().openapi({ description: priorityDescription }),
     startDate: nullableResponseTimestamp,
     dueDate: nullableResponseTimestamp,
+    reminderLeadTimeMinutes: z.number().int().nullable(),
     position: z.number().nullable(),
     createdAt: responseTimestamp,
     userId: z.string().nullable(),

@@ -46,6 +46,7 @@ import updateTaskAssignee from "./controllers/update-task-assignee";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskPriority from "./controllers/update-task-priority";
+import updateTaskReminder from "./controllers/update-task-reminder";
 import updateTaskStatus from "./controllers/update-task-status";
 import updateTaskTitle from "./controllers/update-task-title";
 import {
@@ -73,6 +74,7 @@ import {
   updateDescriptionBody,
   updateDueDateBody,
   updatePriorityBody,
+  updateReminderBody,
   updateStatusBody,
   updateTaskBody,
   updateTitleBody,
@@ -424,6 +426,35 @@ const updateTaskDueDateRoute = createRoute({
   },
 });
 
+const updateTaskReminderRoute = createRoute({
+  method: "put",
+  operationId: "updateTaskReminder",
+  path: "/reminder/{id}",
+  tags: ["Tasks"],
+  summary: "Update task reminder",
+  description:
+    "Set how many minutes before the due date the assignee is notified, or send null to disable the reminder.",
+  middleware: [
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+  ] as const,
+  request: {
+    params: taskParam,
+    body: {
+      required: true,
+      content: { "application/json": { schema: updateReminderBody } },
+    },
+  },
+  responses: {
+    200: jsonResponse("The updated task", taskSchema),
+    400: errorResponse("Invalid reminder lead time, or unknown task"),
+    403: errorResponse(
+      "No workspace access, or missing task:update permission",
+    ),
+  },
+});
+
 const updateTaskTitleRoute = createRoute({
   method: "put",
   operationId: "updateTaskTitle",
@@ -732,6 +763,19 @@ const task = apiRouter<BaseVariables & { workspaceId: string }>()
     const task = await updateTaskDueDate({
       id,
       dueDate: dueDate ? validateAndParseDate(dueDate, "dueDate") : null,
+      currentUserId,
+    });
+
+    return c.json(task, 200);
+  })
+  .openapi(updateTaskReminderRoute, async (c) => {
+    const { id } = c.req.valid("param");
+    const { leadTimeMinutes } = c.req.valid("json");
+    const currentUserId = c.get("userId");
+
+    const task = await updateTaskReminder({
+      id,
+      leadTimeMinutes,
       currentUserId,
     });
 

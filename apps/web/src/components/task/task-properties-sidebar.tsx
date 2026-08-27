@@ -8,7 +8,6 @@ import {
   GitBranch,
   Plus,
 } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +45,7 @@ import TaskDueDatePopover from "./task-due-date-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
-import TaskReminder, { type TaskReminderValue } from "./task-reminder";
+import TaskReminder, { taskReminderValueFromMinutes } from "./task-reminder";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
 
@@ -80,12 +79,6 @@ type TaskPropertiesSidebarProps = {
   compact?: boolean;
 };
 
-const defaultTaskReminder: TaskReminderValue = {
-  amount: 1,
-  enabled: false,
-  unit: "days",
-};
-
 export default function TaskPropertiesSidebar({
   taskId,
   projectId,
@@ -94,13 +87,10 @@ export default function TaskPropertiesSidebar({
   compact = false,
 }: TaskPropertiesSidebarProps) {
   const { t } = useTranslation();
-  const [taskReminders, setTaskReminders] = useState<
-    Record<string, TaskReminderValue>
-  >({});
   const { data: task } = useGetTask(taskId ?? "");
-  const taskReminder = taskId
-    ? (taskReminders[taskId] ?? defaultTaskReminder)
-    : defaultTaskReminder;
+  const taskReminder = taskReminderValueFromMinutes(
+    task?.reminderLeadTimeMinutes ?? null,
+  );
   const taskReminderLabel = taskReminder.enabled
     ? t(
         taskReminder.unit === "minutes"
@@ -111,10 +101,6 @@ export default function TaskPropertiesSidebar({
         { count: taskReminder.amount },
       )
     : t("tasks:properties.reminderOff");
-  const updateTaskReminder = (reminder: TaskReminderValue) => {
-    if (!taskId) return;
-    setTaskReminders((current) => ({ ...current, [taskId]: reminder }));
-  };
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { data: columns = [] } = useGetColumns(projectId);
   const taskIsCompleted = isTaskCompleted(task?.status ?? "", columns);
@@ -354,11 +340,7 @@ export default function TaskPropertiesSidebar({
                 </TaskDueDatePopover>
               )}
               {task && (
-                <TaskReminder
-                  onReminderChange={updateTaskReminder}
-                  reminder={taskReminder}
-                  task={task}
-                >
+                <TaskReminder task={task}>
                   <Button
                     className="h-7 justify-start gap-1.5 px-1.5"
                     size="sm"
@@ -568,11 +550,7 @@ export default function TaskPropertiesSidebar({
                   </TaskDueDatePopover>
                 )}
                 {task && (
-                  <TaskReminder
-                    onReminderChange={updateTaskReminder}
-                    reminder={taskReminder}
-                    task={task}
-                  >
+                  <TaskReminder task={task}>
                     <Button
                       className="h-7 justify-start gap-1.5 px-1.5"
                       size="sm"
@@ -784,11 +762,7 @@ export default function TaskPropertiesSidebar({
                   </TaskDueDatePopover>
                 )}
                 {task && (
-                  <TaskReminder
-                    onReminderChange={updateTaskReminder}
-                    reminder={taskReminder}
-                    task={task}
-                  >
+                  <TaskReminder task={task}>
                     <Button
                       className="h-7 w-full justify-start gap-1.5 px-1.5"
                       size="sm"

@@ -13,14 +13,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { useUpdateTaskReminder } from "@/hooks/mutations/task/use-update-task-reminder";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
 type TaskReminderProps = {
   task: Task;
   children: React.ReactNode;
-  reminder: TaskReminderValue;
-  onReminderChange: (reminder: TaskReminderValue) => void;
 };
 
 export type TaskReminderValue = {
@@ -29,15 +29,38 @@ export type TaskReminderValue = {
   unit: ReminderUnit;
 };
 
-export default function TaskReminder({
-  task,
-  children,
-  reminder,
-  onReminderChange,
-}: TaskReminderProps) {
+export function taskReminderValueFromMinutes(
+  leadTimeMinutes: number | null,
+): TaskReminderValue {
+  if (leadTimeMinutes === null) {
+    return { amount: 1, enabled: false, unit: "days" };
+  }
+  if (leadTimeMinutes % 1440 === 0) {
+    return { amount: leadTimeMinutes / 1440, enabled: true, unit: "days" };
+  }
+  if (leadTimeMinutes % 60 === 0) {
+    return { amount: leadTimeMinutes / 60, enabled: true, unit: "hours" };
+  }
+  return { amount: leadTimeMinutes, enabled: true, unit: "minutes" };
+}
+
+function taskReminderMinutes({
+  amount,
+  enabled,
+  unit,
+}: TaskReminderValue): number | null {
+  if (!enabled) return null;
+  return amount * (unit === "days" ? 1440 : unit === "hours" ? 60 : 1);
+}
+
+export default function TaskReminder({ task, children }: TaskReminderProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const reminder = taskReminderValueFromMinutes(
+    task.reminderLeadTimeMinutes ?? null,
+  );
   const [draft, setDraft] = useState(reminder);
+  const { mutateAsync: updateReminder, isPending } = useUpdateTaskReminder();
   const { canUpdateTasks } = useWorkspacePermission();
   const canEdit = canUpdateTasks();
   const { min, max } = getReminderBounds(draft.unit);
@@ -51,6 +74,25 @@ export default function TaskReminder({
   const handleOpenChange = (nextOpen: boolean) => {
     if (nextOpen) setDraft(reminder);
     setOpen(nextOpen);
+  };
+
+  const handleSave = async () => {
+    if (draft.enabled && !isValid) return;
+    try {
+      await updateReminder({
+        taskId: task.id,
+        projectId: task.projectId,
+        leadTimeMinutes: taskReminderMinutes(draft),
+      });
+      setOpen(false);
+      toast.success(t("tasks:reminder.updateSuccess"));
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("tasks:reminder.updateError"),
+      );
+    }
   };
 
   if (!canEdit) return <>{children}</>;
@@ -89,10 +131,7 @@ export default function TaskReminder({
               onUnitChange={(unit) =>
                 setDraft((current) => ({ ...current, unit }))
               }
-              onConfirm={() => {
-                onReminderChange(draft);
-                setOpen(false);
-              }}
+              onConfirm={handleSave}
               unit={draft.unit}
             />
             {draft.enabled && !isValid && (
@@ -103,10 +142,8 @@ export default function TaskReminder({
           </div>
           <Button
             disabled={draft.enabled && !isValid}
-            onClick={() => {
-              onReminderChange(draft);
-              setOpen(false);
-            }}
+            loading={isPending}
+            onClick={handleSave}
             size="sm"
             type="button"
           >

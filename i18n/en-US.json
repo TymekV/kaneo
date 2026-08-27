@@ -1751,7 +1751,9 @@
 			"label": "Remind me before the due date",
 			"unitLabel": "Reminder time unit",
 			"invalid": "Enter a whole number between {{min}} and {{max}}.",
-			"done": "Done"
+			"done": "Done",
+			"updateSuccess": "Task reminder updated",
+			"updateError": "Failed to update task reminder"
 		},
 		"move": {
 			"title": "Move task",

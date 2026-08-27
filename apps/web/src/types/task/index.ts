@@ -24,6 +24,7 @@ type Task = {
   priority: string | null;
   startDate: string | null;
   dueDate: string | null;
+  reminderLeadTimeMinutes?: number | null;
   position: number | null;
   createdAt: string;
   updatedAt?: string;

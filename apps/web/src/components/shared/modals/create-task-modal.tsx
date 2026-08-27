@@ -97,6 +97,7 @@ function normalizeTask(
     priority: task.priority ?? null,
     startDate: task.startDate ?? null,
     dueDate: task.dueDate ?? null,
+    reminderLeadTimeMinutes: task.reminderLeadTimeMinutes ?? null,
     position: task.position ?? 0,
     userId: task.userId ?? null,
     assigneeId: task.assigneeId ?? task.userId ?? null,

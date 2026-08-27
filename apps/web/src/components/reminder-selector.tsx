@@ -57,6 +57,10 @@ export function ReminderSelector({
       ? t("settings:notificationsPage.reminderLeadTimeUnitDays")
       : t("settings:notificationsPage.reminderLeadTimeUnitHours");
   };
+  const unitItems = reminderUnits.map((value) => ({
+    label: getUnitLabel(value),
+    value,
+  }));
 
   return (
     <div className="flex gap-2">
@@ -83,7 +87,7 @@ export function ReminderSelector({
       </NumberField>
       <Select
         disabled={disabled}
-        items={reminderUnits}
+        items={unitItems}
         onValueChange={(value) => {
           if (isReminderUnit(value)) onUnitChange(value);
         }}

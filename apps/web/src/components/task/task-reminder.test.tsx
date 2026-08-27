@@ -2,7 +2,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "@/components/ui/button";
 import type Task from "@/types/task";
-import TaskReminder, { type TaskReminderValue } from "./task-reminder";
+import TaskReminder from "./task-reminder";
+
+const updateReminder = vi.fn();
 
 afterEach(() => {
   cleanup();
@@ -11,6 +13,13 @@ afterEach(() => {
 
 vi.mock("@/hooks/use-workspace-permission", () => ({
   useWorkspacePermission: () => ({ canUpdateTasks: () => true }),
+}));
+
+vi.mock("@/hooks/mutations/task/use-update-task-reminder", () => ({
+  useUpdateTaskReminder: () => ({
+    mutateAsync: updateReminder,
+    isPending: false,
+  }),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -26,6 +35,7 @@ const task: Task = {
   priority: null,
   startDate: null,
   dueDate: "2026-09-01T12:00:00.000Z",
+  reminderLeadTimeMinutes: 1440,
   position: 1,
   createdAt: "2026-08-27T00:00:00.000Z",
   userId: null,
@@ -34,21 +44,11 @@ const task: Task = {
   projectId: "project-1",
 };
 
-const reminder: TaskReminderValue = {
-  amount: 1,
-  enabled: true,
-  unit: "days",
-};
-
 describe("TaskReminder", () => {
   it("commits the draft reminder only after Done is clicked", async () => {
-    const onReminderChange = vi.fn();
+    updateReminder.mockResolvedValueOnce({ ...task });
     render(
-      <TaskReminder
-        onReminderChange={onReminderChange}
-        reminder={reminder}
-        task={task}
-      >
+      <TaskReminder task={task}>
         <Button>Open reminder</Button>
       </TaskReminder>,
     );
@@ -61,18 +61,17 @@ describe("TaskReminder", () => {
     fireEvent.click(enabledSwitch);
 
     expect(enabledSwitch).toHaveAttribute("aria-checked", "false");
-    expect(
-      screen.getByLabelText("tasks:reminder.label"),
-    ).toBeDisabled();
-    expect(onReminderChange).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("tasks:reminder.label")).toBeDisabled();
+    expect(updateReminder).not.toHaveBeenCalled();
 
     fireEvent.click(
       screen.getByRole("button", { name: "tasks:reminder.done" }),
     );
 
-    expect(onReminderChange).toHaveBeenCalledWith({
-      ...reminder,
-      enabled: false,
+    expect(updateReminder).toHaveBeenCalledWith({
+      leadTimeMinutes: null,
+      projectId: "project-1",
+      taskId: "task-1",
     });
   });
 });

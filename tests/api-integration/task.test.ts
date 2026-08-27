@@ -417,4 +417,91 @@ describe("API integration: task creation", () => {
       expect(persistedTask?.userId).toBeNull();
     },
   );
+
+  it("updates a task reminder and resets only its early-reminder delivery marker", async () => {
+    const member = await createWorkspaceMember();
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const [task] = await db
+      .insert(schema.taskTable)
+      .values({
+        projectId: project.id,
+        userId: member.user.id,
+        title: "Persist task reminder",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        reminderLeadTimeMinutes: 60,
+      })
+      .returning();
+
+    await db.insert(schema.taskReminderSentTable).values([
+      { taskId: task.id, reminderType: "configured_before" },
+      { taskId: task.id, reminderType: "overdue" },
+    ]);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const response = await app.request(`/api/task/reminder/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ leadTimeMinutes: 120 }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      id: task.id,
+      reminderLeadTimeMinutes: 120,
+    });
+
+    const persistedTask = await db.query.taskTable.findFirst({
+      where: eq(schema.taskTable.id, task.id),
+    });
+    expect(persistedTask?.reminderLeadTimeMinutes).toBe(120);
+
+    const sentMarkers = await db.query.taskReminderSentTable.findMany({
+      where: eq(schema.taskReminderSentTable.taskId, task.id),
+    });
+    expect(sentMarkers.map((marker) => marker.reminderType)).toEqual([
+      "overdue",
+    ]);
+  });
+
+  it("disables a task reminder with null and rejects values below five minutes", async () => {
+    const member = await createWorkspaceMember();
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const [task] = await db
+      .insert(schema.taskTable)
+      .values({
+        projectId: project.id,
+        title: "Disable task reminder",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        reminderLeadTimeMinutes: 30,
+      })
+      .returning();
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const invalidResponse = await app.request(`/api/task/reminder/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ leadTimeMinutes: 4 }),
+    });
+    expect(invalidResponse.status).toBe(400);
+
+    const disableResponse = await app.request(`/api/task/reminder/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ leadTimeMinutes: null }),
+    });
+    expect(disableResponse.status).toBe(200);
+    await expect(disableResponse.json()).resolves.toMatchObject({
+      reminderLeadTimeMinutes: null,
+    });
+  });
 });

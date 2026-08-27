@@ -1,0 +1,1 @@
+ALTER TABLE "task" ADD COLUMN "reminder_lead_time_minutes" integer;

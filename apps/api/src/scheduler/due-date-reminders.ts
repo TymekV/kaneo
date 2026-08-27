@@ -44,8 +44,7 @@ async function getTasksNeedingReminder(
       userId: taskTable.userId,
       dueDate: taskTable.dueDate,
       projectId: taskTable.projectId,
-      leadTimeMinutes:
-        userNotificationPreferenceTable.dueDateReminderLeadTimeMinutes,
+      leadTimeMinutes: taskTable.reminderLeadTimeMinutes,
     })
     .from(taskTable)
     .leftJoin(columnTable, eq(taskTable.columnId, columnTable.id))
@@ -65,7 +64,10 @@ async function getTasksNeedingReminder(
         isNotNull(taskTable.userId),
         isNotNull(taskTable.dueDate),
         reminderType === "configured_before"
-          ? sql`${taskTable.dueDate} - (COALESCE(${userNotificationPreferenceTable.dueDateReminderLeadTimeMinutes}, 1440) * interval '1 minute') BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}`
+          ? and(
+              isNotNull(taskTable.reminderLeadTimeMinutes),
+              sql`${taskTable.dueDate} - (${taskTable.reminderLeadTimeMinutes} * interval '1 minute') BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}`,
+            )
           : between(taskTable.dueDate, windowStart, windowEnd),
         isNull(taskReminderSentTable.id),
         or(
@@ -126,7 +128,7 @@ async function processReminder(
     eventData: {
       taskTitle: task.title,
       reminderType,
-      leadTimeMinutes: task.leadTimeMinutes ?? 1440,
+      leadTimeMinutes: task.leadTimeMinutes,
       dueDate: task.dueDate?.toISOString() ?? null,
     },
     resourceId: task.id,

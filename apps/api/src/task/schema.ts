@@ -96,6 +96,9 @@ export const updateAssigneeBody = z.object({
   userId: z.string().nullable().openapi({ description: "Null unassigns." }),
 });
 export const updateDueDateBody = z.object({ dueDate: z.string().optional() });
+export const updateReminderBody = z.object({
+  leadTimeMinutes: z.number().int().min(5).max(43_200).nullable(),
+});
 export const updateTitleBody = z.object({ title: z.string() });
 export const updateDescriptionBody = z.object({ description: z.string() });
 
