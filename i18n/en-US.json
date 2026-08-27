@@ -435,10 +435,11 @@
 			"eventStatusChanges": "Task status changes",
 			"eventDueDateReminders": "Due-date reminders",
 			"reminderLeadTimeLabel": "Remind me before the due date",
-			"reminderLeadTimeHint": "Between 1 hour and 30 days before. Overdue notifications are sent separately.",
+			"reminderLeadTimeHint": "Between 5 minutes and 30 days before. Overdue notifications are sent separately.",
+			"reminderLeadTimeUnitMinutes": "Minutes",
 			"reminderLeadTimeUnitHours": "Hours",
 			"reminderLeadTimeUnitDays": "Days",
-			"reminderLeadTimeInvalid": "Enter a whole number between 1 and {{max}}.",
+			"reminderLeadTimeInvalid": "Enter a whole number between {{min}} and {{max}}.",
 			"saveEventPreferences": "Save notification types",
 			"workspaceCardLabelEmail": "Email",
 			"workspaceCardLabelNtfy": "ntfy",
@@ -1738,7 +1739,19 @@
 			"copyTaskBranch": "Copy task branch",
 			"start": "Start",
 			"startDate": "Start date",
-			"noDate": "No date"
+			"noDate": "No date",
+			"reminderOff": "Off",
+			"reminderMinutesBefore": "{{count}}m before",
+			"reminderHoursBefore": "{{count}}h before",
+			"reminderDaysBefore": "{{count}}d before"
+		},
+		"reminder": {
+			"enabledLabel": "Early notification",
+			"enabledDescription": "Notify me before this task is due.",
+			"label": "Remind me before the due date",
+			"unitLabel": "Reminder time unit",
+			"invalid": "Enter a whole number between {{min}} and {{max}}.",
+			"done": "Done"
 		},
 		"move": {
 			"title": "Move task",
