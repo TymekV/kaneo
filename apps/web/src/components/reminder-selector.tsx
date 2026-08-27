@@ -35,6 +35,7 @@ type ReminderSelectorProps = {
   onAmountChange: (amount: number) => void;
   onUnitChange: (unit: ReminderUnit) => void;
   unit: ReminderUnit;
+  onConfirm?: () => void;
 };
 
 export function ReminderSelector({
@@ -43,6 +44,7 @@ export function ReminderSelector({
   id,
   onAmountChange,
   onUnitChange,
+  onConfirm,
   unit,
 }: ReminderSelectorProps) {
   const { t } = useTranslation();
@@ -65,6 +67,11 @@ export function ReminderSelector({
         max={max}
         min={min}
         onValueChange={(value) => onAmountChange(value ?? 0)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onConfirm?.();
+          }
+        }}
         step={1}
         value={amount}
       >

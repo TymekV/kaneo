@@ -89,6 +89,10 @@ export default function TaskReminder({
               onUnitChange={(unit) =>
                 setDraft((current) => ({ ...current, unit }))
               }
+              onConfirm={() => {
+                onReminderChange(draft);
+                setOpen(false);
+              }}
               unit={draft.unit}
             />
             {draft.enabled && !isValid && (
