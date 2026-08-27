@@ -37,20 +37,26 @@ export default function TaskReminder({
 }: TaskReminderProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(reminder);
   const { canUpdateTasks } = useWorkspacePermission();
   const canEdit = canUpdateTasks();
-  const { min, max } = getReminderBounds(reminder.unit);
+  const { min, max } = getReminderBounds(draft.unit);
   const isValid =
-    Number.isInteger(reminder.amount) &&
-    reminder.amount >= min &&
-    reminder.amount <= max;
+    Number.isInteger(draft.amount) &&
+    draft.amount >= min &&
+    draft.amount <= max;
   const selectorId = `task-reminder-${task.id}`;
   const enabledId = `task-reminder-enabled-${task.id}`;
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) setDraft(reminder);
+    setOpen(nextOpen);
+  };
 
   if (!canEdit) return <>{children}</>;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-4">
         <div className="flex flex-col gap-4">
@@ -64,34 +70,39 @@ export default function TaskReminder({
               </p>
             </div>
             <Switch
-              checked={reminder.enabled}
+              checked={draft.enabled}
               id={enabledId}
               onCheckedChange={(enabled) =>
-                onReminderChange({ ...reminder, enabled })
+                setDraft((current) => ({ ...current, enabled }))
               }
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={selectorId}>{t("tasks:reminder.label")}</Label>
             <ReminderSelector
-              amount={reminder.amount}
-              disabled={!reminder.enabled}
+              amount={draft.amount}
+              disabled={!draft.enabled}
               id={selectorId}
               onAmountChange={(amount) =>
-                onReminderChange({ ...reminder, amount })
+                setDraft((current) => ({ ...current, amount }))
               }
-              onUnitChange={(unit) => onReminderChange({ ...reminder, unit })}
-              unit={reminder.unit}
+              onUnitChange={(unit) =>
+                setDraft((current) => ({ ...current, unit }))
+              }
+              unit={draft.unit}
             />
-            {reminder.enabled && !isValid && (
+            {draft.enabled && !isValid && (
               <p className="text-xs text-destructive">
                 {t("tasks:reminder.invalid", { min, max })}
               </p>
             )}
           </div>
           <Button
-            disabled={reminder.enabled && !isValid}
-            onClick={() => setOpen(false)}
+            disabled={draft.enabled && !isValid}
+            onClick={() => {
+              onReminderChange(draft);
+              setOpen(false);
+            }}
             size="sm"
             type="button"
           >

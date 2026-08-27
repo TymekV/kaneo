@@ -365,7 +365,12 @@ export default function TaskPropertiesSidebar({
                     variant="ghost"
                   >
                     <Bell className="size-3.5 text-muted-foreground" />
-                    <span className="truncate text-xs font-semibold">
+                    <span
+                      className={cn(
+                        "truncate text-xs font-semibold",
+                        !taskReminder.enabled && "text-muted-foreground",
+                      )}
+                    >
                       {taskReminderLabel}
                     </span>
                   </Button>
@@ -574,7 +579,12 @@ export default function TaskPropertiesSidebar({
                       variant="ghost"
                     >
                       <Bell className="size-3.5 text-muted-foreground" />
-                      <span className="truncate text-xs font-semibold">
+                      <span
+                        className={cn(
+                          "truncate text-xs font-semibold",
+                          !taskReminder.enabled && "text-muted-foreground",
+                        )}
+                      >
                         {taskReminderLabel}
                       </span>
                     </Button>
@@ -785,7 +795,12 @@ export default function TaskPropertiesSidebar({
                       variant="ghost"
                     >
                       <Bell className="size-3.5 text-muted-foreground" />
-                      <span className="truncate text-xs font-semibold">
+                      <span
+                        className={cn(
+                          "truncate text-xs font-semibold",
+                          !taskReminder.enabled && "text-muted-foreground",
+                        )}
+                      >
                         {taskReminderLabel}
                       </span>
                     </Button>

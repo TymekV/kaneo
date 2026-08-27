@@ -1,5 +1,4 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "@/components/ui/button";
 import type Task from "@/types/task";
@@ -35,27 +34,24 @@ const task: Task = {
   projectId: "project-1",
 };
 
-function ReminderHarness() {
-  const [reminder, setReminder] = useState<TaskReminderValue>({
-    amount: 1,
-    enabled: true,
-    unit: "days",
-  });
-
-  return (
-    <TaskReminder
-      onReminderChange={setReminder}
-      reminder={reminder}
-      task={task}
-    >
-      <Button>Open reminder</Button>
-    </TaskReminder>
-  );
-}
+const reminder: TaskReminderValue = {
+  amount: 1,
+  enabled: true,
+  unit: "days",
+};
 
 describe("TaskReminder", () => {
-  it("can disable the early notification period", async () => {
-    render(<ReminderHarness />);
+  it("commits the draft reminder only after Done is clicked", async () => {
+    const onReminderChange = vi.fn();
+    render(
+      <TaskReminder
+        onReminderChange={onReminderChange}
+        reminder={reminder}
+        task={task}
+      >
+        <Button>Open reminder</Button>
+      </TaskReminder>,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Open reminder" }));
 
@@ -68,5 +64,15 @@ describe("TaskReminder", () => {
     expect(
       screen.getByLabelText("tasks:reminder.label"),
     ).toBeDisabled();
+    expect(onReminderChange).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "tasks:reminder.done" }),
+    );
+
+    expect(onReminderChange).toHaveBeenCalledWith({
+      ...reminder,
+      enabled: false,
+    });
   });
 });
