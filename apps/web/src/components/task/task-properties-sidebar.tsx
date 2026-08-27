@@ -82,7 +82,7 @@ type TaskPropertiesSidebarProps = {
 
 const defaultTaskReminder: TaskReminderValue = {
   amount: 1,
-  enabled: true,
+  enabled: false,
   unit: "days",
 };
 
