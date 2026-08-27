@@ -73,7 +73,12 @@ export async function checkProjectWebhookReminders(): Promise<{
 
         const [sentRecord] = await db
           .insert(taskReminderSentTable)
-          .values({ taskId: task.id, reminderType })
+          .values({
+            taskId: task.id,
+            reminderType,
+            status: "sending",
+            attempts: 1,
+          })
           .onConflictDoNothing({
             target: [
               taskReminderSentTable.taskId,
@@ -93,7 +98,13 @@ export async function checkProjectWebhookReminders(): Promise<{
 
         if (!delivered) {
           await db
-            .delete(taskReminderSentTable)
+            .update(taskReminderSentTable)
+            .set({ status: "failed", updatedAt: new Date() })
+            .where(eq(taskReminderSentTable.id, sentRecord.id));
+        } else {
+          await db
+            .update(taskReminderSentTable)
+            .set({ status: "sent", sentAt: new Date(), updatedAt: new Date() })
             .where(eq(taskReminderSentTable.id, sentRecord.id));
         }
       }

@@ -47,13 +47,13 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
 export function initializeScheduler(): void {
   jobs.push(
     new Cron(
-      "*/5 * * * *",
+      "*/1 * * * *",
       withCheckIn("due-date-reminders", checkDueDateReminders),
     ),
   );
   jobs.push(
     new Cron(
-      "*/5 * * * *",
+      "*/1 * * * *",
       withCheckIn("project-webhook-reminders", checkProjectWebhookReminders),
     ),
   );
@@ -67,7 +67,7 @@ export function initializeScheduler(): void {
     new Cron("23 * * * *", withCheckIn("trial-reminders", checkTrialReminders)),
   );
   console.log(
-    "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",
+    "⏰ Scheduler started (reminders every 1 minute, seat reconciliation and trial reminders hourly)",
   );
 }
 

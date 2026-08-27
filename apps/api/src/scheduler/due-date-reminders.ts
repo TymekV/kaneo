@@ -1,4 +1,14 @@
-import { and, between, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  between,
+  eq,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import db from "../database";
 import {
   columnTable,
@@ -12,6 +22,8 @@ import { REMINDER_WINDOW_MINUTES } from "./reminder-timing";
 type ReminderType = "configured_before" | "overdue";
 
 const MINUTE_MS = 60 * 1000;
+const CLAIM_BATCH_SIZE = 100;
+const STALE_CLAIM_MINUTES = 5;
 
 function buildWindows(now: Date) {
   const nowMs = now.getTime();
@@ -32,54 +44,101 @@ function buildWindows(now: Date) {
   };
 }
 
-async function getTasksNeedingReminder(
+async function claimTasksNeedingReminder(
   windowStart: Date,
   windowEnd: Date,
   reminderType: ReminderType,
 ) {
-  const results = await db
-    .select({
-      id: taskTable.id,
-      title: taskTable.title,
-      userId: taskTable.userId,
-      dueDate: taskTable.dueDate,
-      projectId: taskTable.projectId,
-      leadTimeMinutes: taskTable.reminderLeadTimeMinutes,
-    })
-    .from(taskTable)
-    .leftJoin(columnTable, eq(taskTable.columnId, columnTable.id))
-    .leftJoin(
-      userNotificationPreferenceTable,
-      eq(userNotificationPreferenceTable.userId, taskTable.userId),
-    )
-    .leftJoin(
-      taskReminderSentTable,
-      and(
-        eq(taskReminderSentTable.taskId, taskTable.id),
-        eq(taskReminderSentTable.reminderType, reminderType),
-      ),
-    )
-    .where(
-      and(
-        isNotNull(taskTable.userId),
-        isNotNull(taskTable.dueDate),
-        reminderType === "configured_before"
-          ? and(
-              isNotNull(taskTable.reminderLeadTimeMinutes),
-              sql`${taskTable.dueDate} - (${taskTable.reminderLeadTimeMinutes} * interval '1 minute') BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}`,
-            )
-          : between(taskTable.dueDate, windowStart, windowEnd),
-        isNull(taskReminderSentTable.id),
-        or(
-          isNull(userNotificationPreferenceTable.id),
-          eq(userNotificationPreferenceTable.dueDateReminderEnabled, true),
+  return db.transaction(async (tx) => {
+    const staleAt = new Date(Date.now() - STALE_CLAIM_MINUTES * MINUTE_MS);
+    const results = await tx
+      .select({
+        id: taskTable.id,
+        title: taskTable.title,
+        userId: taskTable.userId,
+        dueDate: taskTable.dueDate,
+        projectId: taskTable.projectId,
+        leadTimeMinutes: taskTable.reminderLeadTimeMinutes,
+        sentId: taskReminderSentTable.id,
+      })
+      .from(taskTable)
+      .leftJoin(columnTable, eq(taskTable.columnId, columnTable.id))
+      .leftJoin(
+        userNotificationPreferenceTable,
+        eq(userNotificationPreferenceTable.userId, taskTable.userId),
+      )
+      .leftJoin(
+        taskReminderSentTable,
+        and(
+          eq(taskReminderSentTable.taskId, taskTable.id),
+          eq(taskReminderSentTable.reminderType, reminderType),
         ),
-        // Exclude tasks in final columns (completed); include tasks with no column
-        or(isNull(columnTable.isFinal), eq(columnTable.isFinal, false)),
-      ),
-    );
+      )
+      .where(
+        and(
+          isNotNull(taskTable.userId),
+          isNotNull(taskTable.dueDate),
+          reminderType === "configured_before"
+            ? and(
+                isNotNull(taskTable.reminderLeadTimeMinutes),
+                sql`${taskTable.dueDate} - (${taskTable.reminderLeadTimeMinutes} * interval '1 minute') BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}`,
+              )
+            : between(taskTable.dueDate, windowStart, windowEnd),
+          or(
+            isNull(taskReminderSentTable.id),
+            eq(taskReminderSentTable.status, "failed"),
+            and(
+              eq(taskReminderSentTable.status, "sending"),
+              lte(taskReminderSentTable.updatedAt, staleAt),
+            ),
+          ),
+          or(
+            isNull(userNotificationPreferenceTable.id),
+            eq(userNotificationPreferenceTable.dueDateReminderEnabled, true),
+          ),
+          // Exclude tasks in final columns (completed); include tasks with no column
+          or(isNull(columnTable.isFinal), eq(columnTable.isFinal, false)),
+        ),
+      )
+      .orderBy(asc(taskTable.dueDate))
+      .limit(CLAIM_BATCH_SIZE)
+      .for("update", { of: taskTable, skipLocked: true });
 
-  return results;
+    const claimed = [];
+    for (const task of results) {
+      const values = {
+        status: "sending",
+        sentAt: null,
+        attempts: sql`${taskReminderSentTable.attempts} + 1`,
+        updatedAt: new Date(),
+      };
+      if (task.sentId) {
+        await tx
+          .update(taskReminderSentTable)
+          .set(values)
+          .where(eq(taskReminderSentTable.id, task.sentId));
+        claimed.push({ ...task, sentId: task.sentId });
+      } else {
+        const [record] = await tx
+          .insert(taskReminderSentTable)
+          .values({
+            taskId: task.id,
+            reminderType,
+            status: "sending",
+            attempts: 1,
+          })
+          .onConflictDoNothing({
+            target: [
+              taskReminderSentTable.taskId,
+              taskReminderSentTable.reminderType,
+            ],
+          })
+          .returning({ id: taskReminderSentTable.id });
+        if (record) claimed.push({ ...task, sentId: record.id });
+      }
+    }
+    return claimed;
+  });
 }
 
 async function processReminder(
@@ -90,50 +149,37 @@ async function processReminder(
     dueDate: Date | null;
     projectId: string;
     leadTimeMinutes: number | null;
+    sentId: string;
   },
   reminderType: ReminderType,
   notificationType: "due_date_reminder" | "task_overdue",
 ) {
   if (!task.userId) return;
 
-  // Insert sent record first; if it already exists, skip notification
   try {
-    const [inserted] = await db
-      .insert(taskReminderSentTable)
-      .values({
-        taskId: task.id,
+    await createNotification({
+      userId: task.userId,
+      type: notificationType,
+      eventData: {
+        taskTitle: task.title,
         reminderType,
-      })
-      .onConflictDoNothing({
-        target: [
-          taskReminderSentTable.taskId,
-          taskReminderSentTable.reminderType,
-        ],
-      })
-      .returning();
-
-    if (!inserted) return;
-  } catch (error) {
-    console.error("Failed to record due date reminder", {
-      taskId: task.id,
-      reminderType,
-      error,
+        leadTimeMinutes: task.leadTimeMinutes,
+        dueDate: task.dueDate?.toISOString() ?? null,
+      },
+      resourceId: task.id,
+      resourceType: "task",
     });
-    return;
+    await db
+      .update(taskReminderSentTable)
+      .set({ status: "sent", sentAt: new Date() })
+      .where(eq(taskReminderSentTable.id, task.sentId));
+  } catch (error) {
+    await db
+      .update(taskReminderSentTable)
+      .set({ status: "failed", updatedAt: new Date() })
+      .where(eq(taskReminderSentTable.id, task.sentId));
+    throw error;
   }
-
-  await createNotification({
-    userId: task.userId,
-    type: notificationType,
-    eventData: {
-      taskTitle: task.title,
-      reminderType,
-      leadTimeMinutes: task.leadTimeMinutes,
-      dueDate: task.dueDate?.toISOString() ?? null,
-    },
-    resourceId: task.id,
-    resourceType: "task",
-  });
 }
 
 export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
@@ -143,7 +189,7 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
 
   for (const window of Object.values(windows)) {
     try {
-      const tasks = await getTasksNeedingReminder(
+      const tasks = await claimTasksNeedingReminder(
         window.start,
         window.end,
         window.type,

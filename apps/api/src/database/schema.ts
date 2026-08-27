@@ -497,6 +497,9 @@ export const taskReminderSentTable = pgTable(
         onUpdate: "cascade",
       }),
     reminderType: text("reminder_type").notNull(),
+    status: text("status").default("pending").notNull(),
+    sentAt: timestamp("sent_at", { mode: "date" }),
+    attempts: integer("attempts").default(0).notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -505,6 +508,7 @@ export const taskReminderSentTable = pgTable(
   },
   (table) => [
     index("task_reminder_sent_taskId_idx").on(table.taskId),
+    index("task_reminder_sent_status_idx").on(table.status),
     unique("task_reminder_sent_task_type_unique").on(
       table.taskId,
       table.reminderType,
