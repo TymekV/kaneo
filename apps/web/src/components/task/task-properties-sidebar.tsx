@@ -91,7 +91,8 @@ export default function TaskPropertiesSidebar({
   const taskReminder = taskReminderValueFromMinutes(
     task?.reminderLeadTimeMinutes ?? null,
   );
-  const taskReminderLabel = taskReminder.enabled
+  const taskReminderConfigured = Boolean(task?.dueDate && taskReminder.enabled);
+  const taskReminderLabel = taskReminderConfigured
     ? t(
         taskReminder.unit === "minutes"
           ? "tasks:properties.reminderMinutesBefore"
@@ -343,6 +344,7 @@ export default function TaskPropertiesSidebar({
                 <TaskReminder task={task}>
                   <Button
                     className="h-7 justify-start gap-1.5 px-1.5"
+                    disabled={!task.dueDate}
                     size="sm"
                     variant="ghost"
                   >
@@ -350,7 +352,7 @@ export default function TaskPropertiesSidebar({
                     <span
                       className={cn(
                         "truncate text-xs font-semibold",
-                        !taskReminder.enabled && "text-muted-foreground",
+                        !taskReminderConfigured && "text-muted-foreground",
                       )}
                     >
                       {taskReminderLabel}
@@ -553,6 +555,7 @@ export default function TaskPropertiesSidebar({
                   <TaskReminder task={task}>
                     <Button
                       className="h-7 justify-start gap-1.5 px-1.5"
+                      disabled={!task.dueDate}
                       size="sm"
                       variant="ghost"
                     >
@@ -560,7 +563,7 @@ export default function TaskPropertiesSidebar({
                       <span
                         className={cn(
                           "truncate text-xs font-semibold",
-                          !taskReminder.enabled && "text-muted-foreground",
+                          !taskReminderConfigured && "text-muted-foreground",
                         )}
                       >
                         {taskReminderLabel}
@@ -765,6 +768,7 @@ export default function TaskPropertiesSidebar({
                   <TaskReminder task={task}>
                     <Button
                       className="h-7 w-full justify-start gap-1.5 px-1.5"
+                      disabled={!task.dueDate}
                       size="sm"
                       variant="ghost"
                     >
@@ -772,7 +776,7 @@ export default function TaskPropertiesSidebar({
                       <span
                         className={cn(
                           "truncate text-xs font-semibold",
-                          !taskReminder.enabled && "text-muted-foreground",
+                          !taskReminderConfigured && "text-muted-foreground",
                         )}
                       >
                         {taskReminderLabel}
