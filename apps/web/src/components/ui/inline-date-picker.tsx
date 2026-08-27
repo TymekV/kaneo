@@ -4,6 +4,7 @@ import {
   type ChangeEventHandler,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/cn";
@@ -48,7 +49,16 @@ export function InlineDatePicker({
   );
   const isValidTime = TIME_RE.test(timeValue);
 
+  // Marks that the *next* `selected` update was caused by this field's own
+  // onSelect call, so the sync effect below shouldn't stomp on what the
+  // user is mid-typing (e.g. reformat "4:30" -> "04:30" and yank the caret).
+  const selfUpdate = useRef(false);
+
   useEffect(() => {
+    if (selfUpdate.current) {
+      selfUpdate.current = false;
+      return;
+    }
     if (selected) setTimeValue(format(selected, "HH:mm"));
   }, [selected]);
 
@@ -62,6 +72,7 @@ export function InlineDatePicker({
     (time: string) => {
       setTimeValue(time);
       if (selected && TIME_RE.test(time)) {
+        selfUpdate.current = true;
         onSelect(applyTime(time, selected));
       }
       // invalid/partial input: keep it in the field, don't touch `selected`
