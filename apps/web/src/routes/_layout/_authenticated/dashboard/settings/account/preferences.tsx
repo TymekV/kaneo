@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { useLocale } from "@/hooks/use-locale";
 import {
   isWeekStartDay,
+  type TimeFormat,
   useUserPreferencesStore,
   WEEK_START_DAYS,
   type WeekStartDay,
@@ -51,6 +52,8 @@ function RouteComponent() {
     setTheme,
     weekStartsOn,
     setWeekStartsOn,
+    timeFormat,
+    setTimeFormat,
     viewMode,
     setViewMode,
     showTaskNumbers,
@@ -82,6 +85,10 @@ function RouteComponent() {
     0: t("settings:preferencesPage.weekStartsOnSunday"),
     1: t("settings:preferencesPage.weekStartsOnMonday"),
     6: t("settings:preferencesPage.weekStartsOnSaturday"),
+  };
+  const timeFormatLabels: Record<TimeFormat, string> = {
+    "12h": t("settings:preferencesPage.timeFormat12Hour"),
+    "24h": t("settings:preferencesPage.timeFormat24Hour"),
   };
 
   const selectedLocale: AppLocale = locale ?? defaultLocale;
@@ -137,6 +144,39 @@ function RouteComponent() {
                 </SelectItem>
                 <SelectItem value="system">
                   {t("settings:preferencesPage.themeSystem")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">
+                {t("settings:preferencesPage.timeFormat")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("settings:preferencesPage.timeFormatDescription")}
+              </p>
+            </div>
+            <Select
+              value={timeFormat}
+              onValueChange={(value) => value && setTimeFormat(value)}
+            >
+              <SelectTrigger size="sm" className="w-full sm:w-40">
+                <SelectValue
+                  placeholder={t("settings:preferencesPage.selectTimeFormat")}
+                >
+                  {timeFormatLabels[timeFormat]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="12h">
+                  {t("settings:preferencesPage.timeFormat12Hour")}
+                </SelectItem>
+                <SelectItem value="24h">
+                  {t("settings:preferencesPage.timeFormat24Hour")}
                 </SelectItem>
               </SelectContent>
             </Select>

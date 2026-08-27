@@ -523,7 +523,12 @@
 			"labels": "Етикети",
 			"labelsDescription": "Прикажи етикети и тагови на задачите",
 			"priority": "Приоритет",
-			"priorityDescription": "Прикажи индикатори за приоритет"
+			"priorityDescription": "Прикажи индикатори за приоритет",
+			"selectTimeFormat": "Select a time format",
+			"timeFormat": "Time Format",
+			"timeFormat12Hour": "12-hour",
+			"timeFormat24Hour": "24-hour",
+			"timeFormatDescription": "Choose how times are displayed and entered"
 		},
 		"developerPage": {
 			"pageTitle": "Програмерски поставки",

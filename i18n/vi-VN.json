@@ -523,7 +523,12 @@
 			"labels": "Nhãn",
 			"labelsDescription": "Hiển thị nhãn và thẻ của công việc",
 			"priority": "Mức ưu tiên",
-			"priorityDescription": "Hiển thị chỉ báo mức ưu tiên"
+			"priorityDescription": "Hiển thị chỉ báo mức ưu tiên",
+			"selectTimeFormat": "Select a time format",
+			"timeFormat": "Time Format",
+			"timeFormat12Hour": "12-hour",
+			"timeFormat24Hour": "24-hour",
+			"timeFormatDescription": "Choose how times are displayed and entered"
 		},
 		"developerPage": {
 			"pageTitle": "Cài đặt nhà phát triển",

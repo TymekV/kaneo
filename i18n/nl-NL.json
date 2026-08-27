@@ -420,7 +420,12 @@
 			"labels": "Labels",
 			"labelsDescription": "Toon taaklabels en tags",
 			"priority": "Prioriteit",
-			"priorityDescription": "Toon prioriteitsindicatoren"
+			"priorityDescription": "Toon prioriteitsindicatoren",
+			"selectTimeFormat": "Select a time format",
+			"timeFormat": "Time Format",
+			"timeFormat12Hour": "12-hour",
+			"timeFormat24Hour": "24-hour",
+			"timeFormatDescription": "Choose how times are displayed and entered"
 		},
 		"developerPage": {
 			"pageTitle": "Ontwikkelaarsinstellingen",

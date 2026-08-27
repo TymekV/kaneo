@@ -2,6 +2,10 @@ import { format, setHours, setMinutes } from "date-fns";
 import { Clock, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import {
+  type TimeFormat,
+  useUserPreferencesStore,
+} from "@/store/user-preferences";
 import { Button } from "./button";
 import { Calendar } from "./calendar";
 import { ContextMenuItem, ContextMenuSeparator } from "./context-menu";
@@ -22,7 +26,32 @@ export type InlineDatePickerProps = Omit<
   onConfirm?: () => void;
 };
 
-const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+const TIME_24_HOUR_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+const TIME_12_HOUR_RE = /^(0?[1-9]|1[0-2]):([0-5]\d)\s?(AM|PM)$/i;
+
+function formatTime(date: Date, timeFormat: TimeFormat) {
+  return format(date, timeFormat === "12h" ? "hh:mm a" : "HH:mm");
+}
+
+function defaultTime(timeFormat: TimeFormat) {
+  return timeFormat === "12h" ? "12:00 AM" : "00:00";
+}
+
+function parseTime(value: string, timeFormat: TimeFormat) {
+  if (timeFormat === "24h") {
+    if (!TIME_24_HOUR_RE.test(value)) return undefined;
+    const [hours, minutes] = value.split(":").map(Number);
+    return { hours, minutes };
+  }
+
+  const match = TIME_12_HOUR_RE.exec(value);
+  if (!match) return undefined;
+
+  const period = match[3].toUpperCase();
+  const hours = (Number(match[1]) % 12) + (period === "PM" ? 12 : 0);
+  const minutes = Number(match[2]);
+  return { hours, minutes };
+}
 
 export function InlineDatePicker({
   selected,
@@ -37,11 +66,13 @@ export function InlineDatePicker({
   className,
   ...props
 }: InlineDatePickerProps) {
+  const timeFormat = useUserPreferencesStore((state) => state.timeFormat);
   // https://daypicker.dev/guides/timepicker
   const [timeValue, setTimeValue] = useState(
-    selected ? format(selected, "HH:mm") : "00:00",
+    selected ? formatTime(selected, timeFormat) : defaultTime(timeFormat),
   );
-  const isValidTime = TIME_RE.test(timeValue);
+  const parsedTime = parseTime(timeValue, timeFormat);
+  const isValidTime = parsedTime !== undefined;
 
   // Marks that the *next* `selected` update was caused by this field's own
   // onSelect call, so the sync effect below shouldn't stomp on what the
@@ -50,34 +81,38 @@ export function InlineDatePicker({
 
   useEffect(() => {
     if (selected === undefined) {
-      setTimeValue("00:00");
+      setTimeValue(defaultTime(timeFormat));
     }
-  }, [selected]);
+  }, [selected, timeFormat]);
 
   useEffect(() => {
     if (selfUpdate.current) {
       selfUpdate.current = false;
       return;
     }
-    if (selected) setTimeValue(format(selected, "HH:mm"));
-  }, [selected]);
+    if (selected) setTimeValue(formatTime(selected, timeFormat));
+  }, [selected, timeFormat]);
 
-  const applyTime = useCallback((time: string, date: Date | undefined) => {
-    if (!date || !TIME_RE.test(time)) return date;
-    const [hours, minutes] = time.split(":").map(Number);
-    return setHours(setMinutes(date, minutes), hours);
-  }, []);
+  const applyTime = useCallback(
+    (time: string, date: Date | undefined) => {
+      if (!date) return date;
+      const parsed = parseTime(time, timeFormat);
+      if (!parsed) return date;
+      return setHours(setMinutes(date, parsed.minutes), parsed.hours);
+    },
+    [timeFormat],
+  );
 
   const handleTimeChange = useCallback(
     (time: string) => {
       setTimeValue(time);
-      if (selected && TIME_RE.test(time)) {
+      if (selected && parseTime(time, timeFormat)) {
         selfUpdate.current = true;
         onSelect(applyTime(time, selected));
       }
       // invalid/partial input: keep it in the field, don't touch `selected`
     },
-    [selected, onSelect, applyTime],
+    [selected, onSelect, applyTime, timeFormat],
   );
 
   const handleDaySelect = useCallback(
@@ -90,9 +125,9 @@ export function InlineDatePicker({
   const handleBlur = useCallback(() => {
     // snap back to the last valid time rather than leaving garbage in the field
     if (!isValidTime && selected) {
-      setTimeValue(format(selected, "HH:mm"));
+      setTimeValue(formatTime(selected, timeFormat));
     }
-  }, [isValidTime, selected]);
+  }, [isValidTime, selected, timeFormat]);
 
   const save = useCallback(() => {
     if (isValidTime) onConfirm?.();
@@ -131,7 +166,7 @@ export function InlineDatePicker({
                 if (e.key === "Enter") save();
               }}
               aria-invalid={!isValidTime || undefined}
-              placeholder="HH:mm"
+              placeholder={timeFormat === "12h" ? "hh:mm AM/PM" : "HH:mm"}
               className={cn(
                 "appearance-none bg-background",
                 !isValidTime &&

@@ -523,7 +523,12 @@
 			"labels": "Label",
 			"labelsDescription": "Tampilkan label dan tag tugas",
 			"priority": "Prioritas",
-			"priorityDescription": "Tampilkan indikator prioritas"
+			"priorityDescription": "Tampilkan indikator prioritas",
+			"selectTimeFormat": "Select a time format",
+			"timeFormat": "Time Format",
+			"timeFormat12Hour": "12-hour",
+			"timeFormat24Hour": "24-hour",
+			"timeFormatDescription": "Choose how times are displayed and entered"
 		},
 		"developerPage": {
 			"pageTitle": "Pengaturan Pengembang",

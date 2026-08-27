@@ -3,9 +3,15 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export const WEEK_START_DAYS = [0, 1, 6] as const;
 export type WeekStartDay = (typeof WEEK_START_DAYS)[number];
+export const TIME_FORMATS = ["12h", "24h"] as const;
+export type TimeFormat = (typeof TIME_FORMATS)[number];
 
 export function isWeekStartDay(value: number): value is WeekStartDay {
   return WEEK_START_DAYS.some((day) => day === value);
+}
+
+export function isTimeFormat(value: string): value is TimeFormat {
+  return TIME_FORMATS.some((format) => format === value);
 }
 
 type UserPreferencesStore = {
@@ -43,6 +49,9 @@ type UserPreferencesStore = {
 
   weekStartsOn: WeekStartDay;
   setWeekStartsOn: (weekStartsOn: WeekStartDay) => void;
+
+  timeFormat: TimeFormat;
+  setTimeFormat: (timeFormat: TimeFormat) => void;
 };
 
 export const useUserPreferencesStore = create<UserPreferencesStore>()(
@@ -115,6 +124,9 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
 
       weekStartsOn: 0,
       setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
+
+      timeFormat: "24h",
+      setTimeFormat: (timeFormat) => set({ timeFormat }),
     }),
     {
       name: "user-preferences",
@@ -122,6 +134,9 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
       onRehydrateStorage: () => (state) => {
         if (state && !isWeekStartDay(state.weekStartsOn)) {
           state.setWeekStartsOn(0);
+        }
+        if (state && !isTimeFormat(state.timeFormat)) {
+          state.setTimeFormat("24h");
         }
       },
     },

@@ -523,7 +523,12 @@
 			"labels": "Labels",
 			"labelsDescription": "Aufgabenlabels und Tags anzeigen",
 			"priority": "Priorität",
-			"priorityDescription": "Prioritätsindikatoren anzeigen"
+			"priorityDescription": "Prioritätsindikatoren anzeigen",
+			"selectTimeFormat": "Select a time format",
+			"timeFormat": "Time Format",
+			"timeFormat12Hour": "12-hour",
+			"timeFormat24Hour": "24-hour",
+			"timeFormatDescription": "Choose how times are displayed and entered"
 		},
 		"developerPage": {
 			"pageTitle": "Entwicklereinstellungen",

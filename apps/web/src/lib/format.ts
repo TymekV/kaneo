@@ -1,3 +1,4 @@
+import { useUserPreferencesStore } from "@/store/user-preferences";
 import { i18n } from "./i18n";
 
 type DateInput = Date | string | number;
@@ -32,6 +33,8 @@ export function formatDateShort(value: DateInput, locale?: string) {
 }
 
 export function formatDateTimeShort(value: DateInput, locale?: string) {
+  const { timeFormat } = useUserPreferencesStore.getState();
+
   return formatDate(
     value,
     {
@@ -39,6 +42,7 @@ export function formatDateTimeShort(value: DateInput, locale?: string) {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: timeFormat === "12h" ? "h12" : "h23",
     },
     locale,
   );

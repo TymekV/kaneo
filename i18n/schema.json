@@ -1986,6 +1986,21 @@
 						"weekStartsOnSaturday": {
 							"type": "string"
 						},
+						"timeFormat": {
+							"type": "string"
+						},
+						"timeFormatDescription": {
+							"type": "string"
+						},
+						"selectTimeFormat": {
+							"type": "string"
+						},
+						"timeFormat12Hour": {
+							"type": "string"
+						},
+						"timeFormat24Hour": {
+							"type": "string"
+						},
 						"defaultView": {
 							"type": "string"
 						},
@@ -2067,6 +2082,11 @@
 						"weekStartsOnSunday",
 						"weekStartsOnMonday",
 						"weekStartsOnSaturday",
+						"timeFormat",
+						"timeFormatDescription",
+						"selectTimeFormat",
+						"timeFormat12Hour",
+						"timeFormat24Hour",
 						"defaultView",
 						"defaultViewDescription",
 						"selectViewMode",
