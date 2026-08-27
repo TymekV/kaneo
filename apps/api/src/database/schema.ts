@@ -727,11 +727,6 @@ export const userNotificationPreferenceTable = pgTable(
     dueDateReminderEnabled: boolean("due_date_reminder_enabled")
       .default(true)
       .notNull(),
-    dueDateReminderLeadTimeMinutes: integer(
-      "due_date_reminder_lead_time_minutes",
-    )
-      .default(1440)
-      .notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()

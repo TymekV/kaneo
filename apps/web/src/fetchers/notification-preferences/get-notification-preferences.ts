@@ -38,7 +38,6 @@ export type NotificationPreferences = {
   taskCommentEnabled: boolean;
   taskStatusChangeEnabled: boolean;
   dueDateReminderEnabled: boolean;
-  dueDateReminderLeadTimeMinutes: number;
   workspaces: NotificationPreferenceWorkspaceRule[];
   createdAt: string | null;
   updatedAt: string | null;

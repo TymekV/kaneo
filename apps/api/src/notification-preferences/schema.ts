@@ -19,13 +19,6 @@ export const updatePreferencesBody = z.object({
   taskCommentEnabled: z.boolean().optional(),
   taskStatusChangeEnabled: z.boolean().optional(),
   dueDateReminderEnabled: z.boolean().optional(),
-  dueDateReminderLeadTimeMinutes: z
-    .number()
-    .int()
-    .min(5)
-    .max(43_200)
-    .optional()
-    .openapi({ description: "Between 5 minutes and 30 days." }),
 });
 
 export const upsertWorkspaceRuleBody = z.object({

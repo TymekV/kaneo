@@ -47,9 +47,6 @@ export const notificationPreferenceSchema = z
     taskCommentEnabled: z.boolean(),
     taskStatusChangeEnabled: z.boolean(),
     dueDateReminderEnabled: z.boolean(),
-    dueDateReminderLeadTimeMinutes: z.number().openapi({
-      description: "How long before a due date the reminder fires, in minutes.",
-    }),
     workspaces: z.array(workspaceRuleSchema).openapi({
       description:
         "Per-workspace overrides. A workspace with no rule follows the global settings.",

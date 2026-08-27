@@ -32,7 +32,6 @@ const preferences = {
   taskCommentEnabled: true,
   taskStatusChangeEnabled: true,
   dueDateReminderEnabled: true,
-  dueDateReminderLeadTimeMinutes: 1440,
   workspaces: [],
   createdAt: null,
   updatedAt: null,
@@ -76,17 +75,13 @@ describe("NotificationPreferencesSettings", () => {
     updatePreferences.mockResolvedValue(undefined);
   });
 
-  it("saves event preferences and a configurable reminder lead time", async () => {
+  it("saves event preferences without a per-user reminder period", async () => {
     render(<NotificationPreferencesSettings />);
 
     fireEvent.click(
       screen.getByRole("switch", {
         name: "settings:notificationsPage.eventTaskAssignments",
       }),
-    );
-    fireEvent.change(
-      screen.getByLabelText("settings:notificationsPage.reminderLeadTimeLabel"),
-      { target: { value: "2" } },
     );
     fireEvent.click(
       screen.getByRole("button", {
@@ -100,36 +95,16 @@ describe("NotificationPreferencesSettings", () => {
         taskCommentEnabled: true,
         taskStatusChangeEnabled: true,
         dueDateReminderEnabled: true,
-        dueDateReminderLeadTimeMinutes: 2880,
       }),
     );
+    expect(
+      screen.queryByText("settings:notificationsPage.reminderLeadTimeLabel"),
+    ).toBeNull();
   });
 
-  it("blocks saving a cleared reminder lead time", () => {
+  it("keeps the per-user due-date reminder master switch", async () => {
     render(<NotificationPreferencesSettings />);
 
-    fireEvent.change(
-      screen.getByLabelText("settings:notificationsPage.reminderLeadTimeLabel"),
-      { target: { value: "" } },
-    );
-
-    expect(
-      screen.getByText("settings:notificationsPage.reminderLeadTimeInvalid"),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", {
-        name: "settings:notificationsPage.saveEventPreferences",
-      }),
-    ).toHaveProperty("disabled", true);
-  });
-
-  it("saves disabled reminders without validating their retained lead time", async () => {
-    render(<NotificationPreferencesSettings />);
-
-    fireEvent.change(
-      screen.getByLabelText("settings:notificationsPage.reminderLeadTimeLabel"),
-      { target: { value: "0" } },
-    );
     fireEvent.click(
       screen.getByRole("switch", {
         name: "settings:notificationsPage.eventDueDateReminders",

@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { InlineDatePicker } from "@/components/ui/inline-date-picker";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -53,7 +54,6 @@ import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
-import { InlineDatePicker } from "@/components/ui/inline-date-picker";
 
 type CreateTaskModalProps = {
   open: boolean;
@@ -283,7 +283,8 @@ function CreateTaskModal({
 
       const updatedProject = produce(project, (draft) => {
         let existingTask:
-          (typeof draft.columns)[number]["tasks"][number] | undefined;
+          | (typeof draft.columns)[number]["tasks"][number]
+          | undefined;
 
         for (const column of draft.columns ?? []) {
           const taskIndex = column.tasks.findIndex(

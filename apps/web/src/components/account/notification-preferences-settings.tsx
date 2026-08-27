@@ -9,11 +9,6 @@ import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
-  getReminderBounds,
-  ReminderSelector,
-  type ReminderUnit,
-} from "@/components/reminder-selector";
-import {
   useDeleteNotificationWorkspaceRule,
   useUpdateNotificationPreferences,
   useUpsertNotificationWorkspaceRule,
@@ -49,8 +44,6 @@ type NotificationEventPrefsState = {
   taskCommentEnabled: boolean;
   taskStatusChangeEnabled: boolean;
   dueDateReminderEnabled: boolean;
-  dueDateReminderLeadAmount: number;
-  dueDateReminderLeadUnit: ReminderUnit;
 };
 
 function createWorkspaceRuleState(input: {
@@ -490,8 +483,6 @@ export function NotificationPreferencesSettings() {
       taskCommentEnabled: true,
       taskStatusChangeEnabled: true,
       dueDateReminderEnabled: true,
-      dueDateReminderLeadAmount: 1,
-      dueDateReminderLeadUnit: "days",
     });
 
   React.useEffect(() => {
@@ -515,36 +506,13 @@ export function NotificationPreferencesSettings() {
         secret: "",
       },
     });
-    const leadMinutes = preferences.dueDateReminderLeadTimeMinutes;
     setEventPrefs({
       taskAssignmentEnabled: preferences.taskAssignmentEnabled,
       taskCommentEnabled: preferences.taskCommentEnabled,
       taskStatusChangeEnabled: preferences.taskStatusChangeEnabled,
       dueDateReminderEnabled: preferences.dueDateReminderEnabled,
-      ...(leadMinutes > 0 && leadMinutes % 1440 === 0
-        ? {
-            dueDateReminderLeadAmount: leadMinutes / 1440,
-            dueDateReminderLeadUnit: "days" as const,
-          }
-        : leadMinutes > 0 && leadMinutes % 60 === 0
-          ? {
-              dueDateReminderLeadAmount: leadMinutes / 60,
-              dueDateReminderLeadUnit: "hours" as const,
-            }
-          : {
-              dueDateReminderLeadAmount: leadMinutes,
-              dueDateReminderLeadUnit: "minutes" as const,
-            }),
     });
   }, [preferences]);
-
-  const { min: leadTimeMin, max: leadTimeMax } = getReminderBounds(
-    eventPrefs.dueDateReminderLeadUnit,
-  );
-  const leadTimeValid =
-    Number.isInteger(eventPrefs.dueDateReminderLeadAmount) &&
-    eventPrefs.dueDateReminderLeadAmount >= leadTimeMin &&
-    eventPrefs.dueDateReminderLeadAmount <= leadTimeMax;
 
   const workspaceRuleMap = React.useMemo(
     () =>
@@ -623,65 +591,15 @@ export function NotificationPreferencesSettings() {
           />
         </div>
 
-        <div className="flex max-w-sm flex-col gap-1">
-          <Label htmlFor="due-date-reminder-lead-time">
-            {t("settings:notificationsPage.reminderLeadTimeLabel")}
-          </Label>
-          <ReminderSelector
-            amount={eventPrefs.dueDateReminderLeadAmount}
-            disabled={!eventPrefs.dueDateReminderEnabled}
-            id="due-date-reminder-lead-time"
-            onAmountChange={(amount) =>
-              setEventPrefs((current) => ({
-                ...current,
-                dueDateReminderLeadAmount: amount,
-              }))
-            }
-            onUnitChange={(unit) =>
-              setEventPrefs((current) => ({
-                ...current,
-                dueDateReminderLeadUnit: unit,
-              }))
-            }
-            unit={eventPrefs.dueDateReminderLeadUnit}
-          />
-          {eventPrefs.dueDateReminderEnabled && !leadTimeValid ? (
-            <p className="text-xs text-destructive">
-              {t("settings:notificationsPage.reminderLeadTimeInvalid", {
-                min: leadTimeMin,
-                max: leadTimeMax,
-              })}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {t("settings:notificationsPage.reminderLeadTimeHint")}
-            </p>
-          )}
-        </div>
-
         <div>
           <Button
-            disabled={
-              isSavingPreferences ||
-              (eventPrefs.dueDateReminderEnabled && !leadTimeValid)
-            }
+            disabled={isSavingPreferences}
             onClick={async () => {
               await updatePreferences({
                 taskAssignmentEnabled: eventPrefs.taskAssignmentEnabled,
                 taskCommentEnabled: eventPrefs.taskCommentEnabled,
                 taskStatusChangeEnabled: eventPrefs.taskStatusChangeEnabled,
                 dueDateReminderEnabled: eventPrefs.dueDateReminderEnabled,
-                ...(eventPrefs.dueDateReminderEnabled
-                  ? {
-                      dueDateReminderLeadTimeMinutes:
-                        eventPrefs.dueDateReminderLeadAmount *
-                        (eventPrefs.dueDateReminderLeadUnit === "days"
-                          ? 1440
-                          : eventPrefs.dueDateReminderLeadUnit === "hours"
-                            ? 60
-                            : 1),
-                    }
-                  : {}),
               });
             }}
             type="button"

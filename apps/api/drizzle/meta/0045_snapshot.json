@@ -1,5 +1,5 @@
 {
-	"id": "01d4cb46-be2e-4c8d-8a2a-05770214ac05",
+	"id": "84d30d7d-f640-4b3c-b45d-ce77745eb21e",
 	"prevId": "9248c325-fef7-4c63-a54a-6800d29169ec",
 	"version": "7",
 	"dialect": "postgresql",
@@ -3371,13 +3371,6 @@
 					"primaryKey": false,
 					"notNull": true,
 					"default": true
-				},
-				"due_date_reminder_lead_time_minutes": {
-					"name": "due_date_reminder_lead_time_minutes",
-					"type": "integer",
-					"primaryKey": false,
-					"notNull": true,
-					"default": 1440
 				},
 				"created_at": {
 					"name": "created_at",
