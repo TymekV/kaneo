@@ -1,12 +1,6 @@
 import { format, setHours, setMinutes } from "date-fns";
 import { Clock, X } from "lucide-react";
-import {
-  type ChangeEventHandler,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
 import { Calendar } from "./calendar";
@@ -53,6 +47,12 @@ export function InlineDatePicker({
   // onSelect call, so the sync effect below shouldn't stomp on what the
   // user is mid-typing (e.g. reformat "4:30" -> "04:30" and yank the caret).
   const selfUpdate = useRef(false);
+
+  useEffect(() => {
+    if (selected === undefined) {
+      setTimeValue("00:00");
+    }
+  }, [selected]);
 
   useEffect(() => {
     if (selfUpdate.current) {

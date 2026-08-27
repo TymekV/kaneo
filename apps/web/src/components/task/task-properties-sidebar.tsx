@@ -34,7 +34,7 @@ import {
   getDueDateStatus,
   isTaskCompleted,
 } from "@/lib/due-date-status";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort, formatDateTimeShort } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel, getStatusDisplayLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
@@ -310,7 +310,7 @@ export default function TaskPropertiesSidebar({
                           />
                         )}
                         <span className="text-xs font-semibold">
-                          {formatDateShort(task.dueDate)}
+                          {formatDateTimeShort(task.dueDate)}
                         </span>
                       </>
                     ) : (
@@ -501,7 +501,7 @@ export default function TaskPropertiesSidebar({
                             />
                           )}
                           <span className="text-xs font-semibold">
-                            {formatDateShort(task.dueDate)}
+                            {formatDateTimeShort(task.dueDate)}
                           </span>
                         </>
                       ) : (
@@ -694,7 +694,7 @@ export default function TaskPropertiesSidebar({
                             />
                           )}
                           <span className="text-xs font-semibold">
-                            {formatDateShort(task.dueDate)}
+                            {formatDateTimeShort(task.dueDate)}
                           </span>
                         </>
                       ) : (

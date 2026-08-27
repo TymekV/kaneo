@@ -189,6 +189,9 @@ function CreateTaskModal({
   const [assigneeId, setAssigneeId] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>(
+    undefined,
+  );
   const [createMore, setCreateMore] = useState(false);
   const [labels, setLabels] = useState<Label[]>([]);
   const [draftTask, setDraftTask] = useState<Task | null>(null);
@@ -219,6 +222,10 @@ function CreateTaskModal({
   const { mutateAsync: createTask } = useCreateTask();
   const { mutateAsync: updateTask } = useUpdateTask();
   const { mutateAsync: deleteTask } = useDeleteTask();
+
+  useEffect(() => {
+    setSelectedDueDate(dueDate);
+  }, [dueDate]);
 
   const filteredLabels = (() => {
     const searchFiltered = workspaceLabels.filter((label) =>
@@ -891,9 +898,14 @@ function CreateTaskModal({
                 </PopoverTrigger>
                 <PopoverContent className="p-0" align="start">
                   <InlineDatePicker
-                    selected={dueDate}
-                    onSelect={setDueDate}
+                    selected={selectedDueDate}
+                    onSelect={setSelectedDueDate}
                     className="w-full bg-popover"
+                    pickTime
+                    confirmShown
+                    clearShown={!!dueDate}
+                    onConfirm={() => setDueDate(selectedDueDate)}
+                    onClear={() => setDueDate(undefined)}
                     clearLabel={t("common:modals.createTask.clearDueDate")}
                   />
                 </PopoverContent>

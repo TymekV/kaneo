@@ -31,6 +31,19 @@ export function formatDateShort(value: DateInput, locale?: string) {
   );
 }
 
+export function formatDateTimeShort(value: DateInput, locale?: string) {
+  return formatDate(
+    value,
+    {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+    locale,
+  );
+}
+
 export function formatDateMedium(value: DateInput, locale?: string) {
   return formatDate(
     value,
