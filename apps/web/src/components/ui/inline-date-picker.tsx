@@ -1,5 +1,5 @@
 import { format, setHours, setMinutes } from "date-fns";
-import { X } from "lucide-react";
+import { Clock, X } from "lucide-react";
 import {
   type ChangeEventHandler,
   useCallback,
@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "./button";
 import { Calendar } from "./calendar";
 import { ContextMenuItem, ContextMenuSeparator } from "./context-menu";
-import { Input } from "./input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./input-group";
 
 export type InlineDatePickerProps = Omit<
   React.ComponentProps<typeof Calendar>,
@@ -23,6 +23,8 @@ export type InlineDatePickerProps = Omit<
   onClear?: () => void;
   context?: "popover" | "context-menu";
   pickTime?: boolean;
+  confirmShown?: boolean;
+  onConfirm?: () => void;
 };
 
 export function InlineDatePicker({
@@ -33,6 +35,8 @@ export function InlineDatePicker({
   onClear,
   context = "popover",
   pickTime = false,
+  confirmShown = false,
+  onConfirm,
   className,
   ...props
 }: InlineDatePickerProps) {
@@ -91,22 +95,38 @@ export function InlineDatePicker({
         mode="single"
         selected={selected}
         onSelect={handleDaySelect}
+        defaultMonth={selected}
         className={cn(
-          "w-full bg-popover",
+          "bg-popover",
           context === "context-menu" && "p-2",
           className,
         )}
         {...props}
       />
-      {pickTime && (
-        <Input
-          type="time"
-          step="60"
-          value={timeValue}
-          onChange={(e) => setTimeValue(e.target.value)}
-          className="mt-2 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-        />
-      )}
+      <div className="flex flex-col">
+        {pickTime && (
+          <InputGroup className="mt-2 w-70 sm:w-63">
+            <InputGroupAddon>
+              <Clock className="text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupInput
+              value={timeValue}
+              onChange={(e) => setTimeValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onConfirm?.();
+                }
+              }}
+              className="appearance-none bg-background"
+            />
+          </InputGroup>
+        )}
+        {confirmShown && (
+          <Button className="mt-2 w-full" onClick={onConfirm}>
+            Done
+          </Button>
+        )}
+      </div>
       {(clearShown === "auto" ? !!selected : clearShown) &&
         (context === "popover" ? (
           <div className="pt-2 mt-2 border-t border-border">

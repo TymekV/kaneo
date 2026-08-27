@@ -1,8 +1,5 @@
-import { X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -28,8 +25,13 @@ export default function TaskDueDatePopover({
   const { mutateAsync: updateTaskDueDate } = useUpdateTaskDueDate();
   const { canUpdateTasks } = useWorkspacePermission();
   const canEdit = canUpdateTasks();
+  const [date, setDate] = useState<Date | undefined>(undefined);
 
-  const handleDateChange = async (date: Date | undefined) => {
+  useEffect(() => {
+    setDate(task.dueDate ? new Date(task.dueDate) : undefined);
+  }, [task.dueDate]);
+
+  const handleSave = useCallback(async () => {
     try {
       await updateTaskDueDate({
         ...task,
@@ -44,7 +46,7 @@ export default function TaskDueDatePopover({
           : t("tasks:popover.dueDate.updateError"),
       );
     }
-  };
+  }, [task, date, updateTaskDueDate, t]);
 
   if (!canEdit) return <>{children}</>;
 
@@ -53,11 +55,14 @@ export default function TaskDueDatePopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="p-0" align="start">
         <InlineDatePicker
-          selected={task.dueDate ? new Date(task.dueDate) : undefined}
-          onSelect={handleDateChange}
+          selected={date}
+          onSelect={setDate}
           disabled={
             task.startDate ? { before: new Date(task.startDate) } : undefined
           }
+          pickTime
+          confirmShown
+          onConfirm={handleSave}
           clearLabel={t("tasks:popover.dueDate.clear")}
         />
       </PopoverContent>
