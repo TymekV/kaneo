@@ -27,6 +27,8 @@ export type InlineDatePickerProps = Omit<
   onConfirm?: () => void;
 };
 
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+
 export function InlineDatePicker({
   selected,
   onSelect,
@@ -41,53 +43,49 @@ export function InlineDatePicker({
   ...props
 }: InlineDatePickerProps) {
   // https://daypicker.dev/guides/timepicker
-  const [timeValue, setTimeValue] = useState<string>("00:00");
+  const [timeValue, setTimeValue] = useState(
+    selected ? format(selected, "HH:mm") : "00:00",
+  );
+  const isValidTime = TIME_RE.test(timeValue);
 
   useEffect(() => {
-    if (selected) {
-      setTimeValue(format(selected, "HH:mm"));
-    }
+    if (selected) setTimeValue(format(selected, "HH:mm"));
   }, [selected]);
 
-  const handleTimeChange: ChangeEventHandler<HTMLInputElement> = useCallback(
-    (e) => {
-      const time = e.target.value;
-      if (!selected) {
-        // Defer composing a full Date until a day is picked.
-        setTimeValue(time);
-        return;
-      }
-      const [hours, minutes] = time
-        .split(":")
-        .map((str) => Number.parseInt(str, 10));
-      // Compose a new Date using the current day plus the chosen time.
-      const newSelectedDate = setHours(setMinutes(selected, minutes), hours);
-      onSelect(newSelectedDate);
+  const applyTime = useCallback((time: string, date: Date | undefined) => {
+    if (!date || !TIME_RE.test(time)) return date;
+    const [hours, minutes] = time.split(":").map(Number);
+    return setHours(setMinutes(date, minutes), hours);
+  }, []);
+
+  const handleTimeChange = useCallback(
+    (time: string) => {
       setTimeValue(time);
+      if (selected && TIME_RE.test(time)) {
+        onSelect(applyTime(time, selected));
+      }
+      // invalid/partial input: keep it in the field, don't touch `selected`
     },
-    [onSelect, selected],
+    [selected, onSelect, applyTime],
   );
 
   const handleDaySelect = useCallback(
     (date: Date | undefined) => {
-      if (!timeValue || !date) {
-        onSelect(date);
-        return;
-      }
-      const [hours, minutes] = timeValue
-        .split(":")
-        .map((str) => Number.parseInt(str, 10));
-      const newDate = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        hours,
-        minutes,
-      );
-      onSelect(newDate);
+      onSelect(applyTime(timeValue, date));
     },
-    [onSelect, timeValue],
+    [onSelect, timeValue, applyTime],
   );
+
+  const handleBlur = useCallback(() => {
+    // snap back to the last valid time rather than leaving garbage in the field
+    if (!isValidTime && selected) {
+      setTimeValue(format(selected, "HH:mm"));
+    }
+  }, [isValidTime, selected]);
+
+  const save = useCallback(() => {
+    if (isValidTime) onConfirm?.();
+  }, [isValidTime, onConfirm]);
 
   return (
     <>
@@ -107,22 +105,36 @@ export function InlineDatePicker({
         {pickTime && (
           <InputGroup className="mt-2 w-70 sm:w-63">
             <InputGroupAddon>
-              <Clock className="text-muted-foreground" />
+              <Clock
+                className={cn(
+                  "text-muted-foreground",
+                  !isValidTime && "text-destructive",
+                )}
+              />
             </InputGroupAddon>
             <InputGroupInput
               value={timeValue}
-              onChange={(e) => setTimeValue(e.target.value)}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              onBlur={handleBlur}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onConfirm?.();
-                }
+                if (e.key === "Enter") save();
               }}
-              className="appearance-none bg-background"
+              aria-invalid={!isValidTime || undefined}
+              placeholder="HH:mm"
+              className={cn(
+                "appearance-none bg-background",
+                !isValidTime &&
+                  "border-destructive text-destructive ring-destructive",
+              )}
             />
           </InputGroup>
         )}
         {confirmShown && (
-          <Button className="mt-2 w-full" onClick={onConfirm}>
+          <Button
+            className="mt-2 w-full"
+            onClick={save}
+            disabled={!isValidTime}
+          >
             Done
           </Button>
         )}
