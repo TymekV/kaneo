@@ -45,6 +45,20 @@ const task: Task = {
 };
 
 describe("TaskReminder", () => {
+  it("warns when the task has no assignee", async () => {
+    render(
+      <TaskReminder task={task}>
+        <Button>Open reminder</Button>
+      </TaskReminder>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open reminder" }));
+
+    expect(
+      await screen.findByText("tasks:reminder.unassignedWarning"),
+    ).toBeInTheDocument();
+  });
+
   it("commits the draft reminder only after Done is clicked", async () => {
     updateReminder.mockResolvedValueOnce({ ...task });
     render(

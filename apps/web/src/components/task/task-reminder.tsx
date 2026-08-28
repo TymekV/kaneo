@@ -1,3 +1,4 @@
+import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -5,6 +6,7 @@ import {
   ReminderSelector,
   type ReminderUnit,
 } from "@/components/reminder-selector";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -102,6 +104,14 @@ export default function TaskReminder({ task, children }: TaskReminderProps) {
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-4">
         <div className="flex flex-col gap-4">
+          {!task.userId && (
+            <Alert variant="warning" className="rounded-md">
+              <TriangleAlert />
+              <AlertDescription>
+                {t("tasks:reminder.unassignedWarning")}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
               <Label htmlFor={enabledId}>

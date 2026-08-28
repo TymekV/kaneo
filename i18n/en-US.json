@@ -1745,6 +1745,7 @@
 		"reminder": {
 			"enabledLabel": "Early notification",
 			"enabledDescription": "Notify assignees before this task is due.",
+			"unassignedWarning": "This task is unassigned, so its reminder will not be delivered.",
 			"label": "Remind before the due date",
 			"unitLabel": "Reminder time unit",
 			"invalid": "Enter a whole number between {{min}} and {{max}}.",
