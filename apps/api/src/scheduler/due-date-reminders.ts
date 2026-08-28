@@ -113,6 +113,11 @@ async function claimTasksNeedingReminder(
         updatedAt: new Date(),
       };
       if (task.sentId) {
+        console.log("Reclaiming failed/stale reminder for retry", {
+          taskId: task.id,
+          reminderType,
+          sentId: task.sentId,
+        });
         await tx
           .update(taskReminderSentTable)
           .set(values)
@@ -154,10 +159,32 @@ async function processReminder(
   reminderType: ReminderType,
   notificationType: "due_date_reminder" | "task_overdue",
 ) {
-  if (!task.userId) return;
+  if (!task.userId) {
+    // Defensive: the claim query already filters isNotNull(userId), so this
+    // should be unreachable. Still, mark the claim as failed rather than
+    // leaving it stuck in "sending" forever if it is ever hit.
+    console.error("Reminder claimed without a userId, marking as failed", {
+      taskId: task.id,
+      sentId: task.sentId,
+      reminderType,
+    });
+    await db
+      .update(taskReminderSentTable)
+      .set({ status: "failed", updatedAt: new Date() })
+      .where(eq(taskReminderSentTable.id, task.sentId));
+    return;
+  }
+
+  console.log("Sending due date reminder", {
+    taskId: task.id,
+    userId: task.userId,
+    reminderType,
+    notificationType,
+    dueDate: task.dueDate?.toISOString() ?? null,
+  });
 
   try {
-    await createNotification({
+    const notification = await createNotification({
       userId: task.userId,
       type: notificationType,
       eventData: {
@@ -173,11 +200,24 @@ async function processReminder(
       .update(taskReminderSentTable)
       .set({ status: "sent", sentAt: new Date() })
       .where(eq(taskReminderSentTable.id, task.sentId));
+    console.log("Due date reminder sent", {
+      taskId: task.id,
+      userId: task.userId,
+      reminderType,
+      notificationId: notification?.id ?? null,
+      skippedByPreference: notification === null,
+    });
   } catch (error) {
     await db
       .update(taskReminderSentTable)
       .set({ status: "failed", updatedAt: new Date() })
       .where(eq(taskReminderSentTable.id, task.sentId));
+    console.error("Failed to send due date reminder", {
+      taskId: task.id,
+      userId: task.userId,
+      reminderType,
+      error,
+    });
     throw error;
   }
 }
@@ -186,6 +226,10 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
   const now = new Date();
   const windows = buildWindows(now);
   let degraded = false;
+  let sent = 0;
+  let failed = 0;
+
+  console.log("Checking due date reminders", { now: now.toISOString() });
 
   for (const window of Object.values(windows)) {
     try {
@@ -195,11 +239,20 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
         window.type,
       );
 
+      console.log("Claimed tasks for reminder window", {
+        reminderType: window.type,
+        windowStart: window.start.toISOString(),
+        windowEnd: window.end.toISOString(),
+        claimedCount: tasks.length,
+      });
+
       for (const task of tasks) {
         try {
           await processReminder(task, window.type, window.notificationType);
+          sent++;
         } catch (error) {
           degraded = true;
+          failed++;
           console.error("Failed to process due date reminder", {
             taskId: task.id,
             reminderType: window.type,
@@ -215,6 +268,12 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
       });
     }
   }
+
+  console.log("Finished checking due date reminders", {
+    sent,
+    failed,
+    degraded,
+  });
 
   return { degraded };
 }

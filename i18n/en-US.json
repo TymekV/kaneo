@@ -1744,8 +1744,8 @@
 		},
 		"reminder": {
 			"enabledLabel": "Early notification",
-			"enabledDescription": "Notify me before this task is due.",
-			"label": "Remind me before the due date",
+			"enabledDescription": "Notify assignees before this task is due.",
+			"label": "Remind before the due date",
 			"unitLabel": "Reminder time unit",
 			"invalid": "Enter a whole number between {{min}} and {{max}}.",
 			"done": "Done",

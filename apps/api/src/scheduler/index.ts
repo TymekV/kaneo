@@ -66,6 +66,7 @@ export function initializeScheduler(): void {
   jobs.push(
     new Cron("23 * * * *", withCheckIn("trial-reminders", checkTrialReminders)),
   );
+  checkDueDateReminders();
   console.log(
     "⏰ Scheduler started (reminders every 1 minute, seat reconciliation and trial reminders hourly)",
   );
