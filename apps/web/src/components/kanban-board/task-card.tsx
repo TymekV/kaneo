@@ -8,6 +8,7 @@ import {
   CalendarX,
   GitMerge,
   GitPullRequest,
+  SquareCheck,
 } from "lucide-react";
 import {
   type CSSProperties,
@@ -27,6 +28,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   HoverCard,
   HoverCardContent,
@@ -35,15 +38,16 @@ import {
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { cn } from "@/lib/cn";
 import {
   dueDateStatusColors,
   getDueDateStatus,
   isTaskCompleted,
 } from "@/lib/due-date-status";
 import { getInitials } from "@/lib/get-initials";
+import { getTaskItemStats } from "@/lib/get-task-item-stats";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
-import queryClient from "@/query-client";
 import useBulkSelectionStore, {
   useIsTaskFocused,
   useIsTaskSelected,
@@ -51,8 +55,6 @@ import useBulkSelectionStore, {
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
-import { Button } from "../ui/button";
-import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
 import { TaskLabels } from "./task-labels";
 
@@ -86,10 +88,17 @@ const TaskCardContent = memo(
     const showDueDates = useUserPreferencesStore((s) => s.showDueDates);
     const showLabels = useUserPreferencesStore((s) => s.showLabels);
     const showTaskNumbers = useUserPreferencesStore((s) => s.showTaskNumbers);
+    const showTaskItemCounts = useUserPreferencesStore(
+      (s) => s.showTaskItemCounts,
+    );
     const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
     const toggleSelection = useBulkSelectionStore((s) => s.toggleSelection);
     const isTaskSelected = useIsTaskSelected(task.id);
     const isTaskFocused = useIsTaskFocused(task.id);
+    const taskItemStats = useMemo(
+      () => getTaskItemStats(task.description),
+      [task.description],
+    );
 
     const pullRequests = useMemo(() => {
       return (task.externalLinks ?? []).filter(
@@ -194,17 +203,13 @@ const TaskCardContent = memo(
     const handleDeleteTask = useCallback(async () => {
       try {
         await deleteTask(task.id);
-        queryClient.invalidateQueries({
-          queryKey: ["tasks", projectId],
-        });
+        toast.success(t("tasks:delete.success"));
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : t("tasks:delete.error"),
         );
-      } finally {
-        toast.success(t("tasks:delete.success"));
       }
-    }, [deleteTask, projectId, t, task.id]);
+    }, [deleteTask, t, task.id]);
 
     return (
       <>
@@ -286,14 +291,29 @@ const TaskCardContent = memo(
 
               <div className="flex items-center gap-1.5">
                 {showPriority && (
-                  <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                  <span className="inline-flex h-5.5 items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
                     {getPriorityIcon(task.priority ?? "")}
+                  </span>
+                )}
+
+                {showTaskItemCounts && taskItemStats.total > 0 && (
+                  <span
+                    className={cn(
+                      "flex h-5.5 items-center gap-1 rounded bg-muted/50 px-2 py-1 text-[10px] text-muted-foreground",
+                      {
+                        "bg-success/10 text-success-foreground":
+                          taskItemStats.completed === taskItemStats.total,
+                      },
+                    )}
+                  >
+                    <SquareCheck className="h-[12px] w-[12px]" />
+                    {taskItemStats.completed}/{taskItemStats.total}
                   </span>
                 )}
 
                 {showDueDates && task.dueDate && (
                   <div
-                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                    className={`flex h-5.5 items-center gap-1 rounded px-2 py-1 text-[10px] ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
                   >
                     {dueDateStatus === "overdue" && (
                       <CalendarX className="w-3 h-3" />
